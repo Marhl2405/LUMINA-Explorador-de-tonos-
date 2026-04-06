@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMINA — Tone Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0a0a0c;
+  --panel:   #111115;
+  --panel2:  #16161c;
+  --border:  #222230;
+  --text:    #e8e4f0;
+  --dim:     #5a5470;
+  --col:     120,80,220;
+  --scan:    rgba(255,255,255,0.018);
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Fira Code', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content:''; position:fixed; inset:0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scan) 2px,var(--scan) 4px);
+  pointer-events:none; z-index:999;
+}
+
+.orb { position:fixed; border-radius:50%; filter:blur(90px); pointer-events:none; z-index:0; transition:background 1.4s ease; }
+.orb-1 { width:560px;height:560px;top:-140px;left:-120px; animation:floatA 13s ease-in-out infinite; }
+.orb-2 { width:440px;height:440px;bottom:-100px;right:-100px; animation:floatB 15s ease-in-out infinite; }
+.orb-3 { width:300px;height:300px;top:40%;left:55%; animation:floatA 18s ease-in-out infinite 3s; opacity:0.5; }
+@keyframes floatA{0%,100%{transform:translate(0,0)}50%{transform:translate(28px,18px)}}
+@keyframes floatB{0%,100%{transform:translate(0,0)}50%{transform:translate(-22px,-28px)}}
+
+.wrap { position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 24px 80px; }
+
+/* HEADER */
+header {
+  padding:36px 0 28px;
+  border-bottom:1px solid rgba(var(--col),0.22);
+  margin-bottom:36px;
+  display:flex; align-items:flex-end; justify-content:space-between;
+  flex-wrap:wrap; gap:14px;
+  transition:border-color 0.8s;
+}
+.logo-block h1 {
+  font-family:'Syne',sans-serif;
+  font-size:clamp(2rem,5vw,3.4rem);
+  font-weight:800; letter-spacing:-1px; line-height:1; color:var(--text);
+}
+.logo-block h1 .accent {
+  color:rgb(var(--col));
+  text-shadow:0 0 30px rgba(var(--col),0.5);
+  transition:color 0.8s,text-shadow 0.8s;
+}
+.logo-sub { margin-top:6px;font-size:0.75rem;color:var(--dim);letter-spacing:2px;text-transform:uppercase; }
+
+.hdr-btns { display:flex;gap:8px;align-items:center;flex-wrap:wrap; }
+
+.btn {
+  font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:9px 18px;border:1px solid;cursor:pointer;transition:all 0.2s;
+}
+.btn-accent {
+  background:rgb(var(--col));border-color:rgb(var(--col));color:#0a0a0c;
+  box-shadow:0 0 20px rgba(var(--col),0.35);
+  transition:background 0.8s,border-color 0.8s,box-shadow 0.8s,color 0.8s;
+}
+.btn-accent:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.btn-outline {
+  background:transparent;border-color:rgba(var(--col),0.5);color:rgb(var(--col));
+  transition:border-color 0.8s,color 0.8s;
+}
+.btn-outline:hover{border-color:rgb(var(--col));background:rgba(var(--col),0.08);}
+
+.lang-btn {
+  font-family:'Fira Code',monospace;font-size:0.72rem;
+  padding:6px 10px;border:1px solid var(--border);
+  background:transparent;color:var(--dim);cursor:pointer;transition:all 0.15s;
+}
+.lang-btn.active,.lang-btn:hover{border-color:rgb(var(--col));color:rgb(var(--col));}
+
+/* INPUT */
+.input-section {
+  background:var(--panel);border:1px solid var(--border);
+  padding:26px 30px;margin-bottom:32px;position:relative;overflow:hidden;
+}
+.input-section::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,rgb(var(--col)),transparent);
+  transition:background 0.8s;
+}
+.input-label {
+  font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:18px;
+}
+.input-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.rgb-group{display:flex;flex-direction:column;gap:5px;}
+.rgb-group label{font-size:0.62rem;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+.rgb-group input[type="number"]{
+  width:70px;padding:9px 11px;background:var(--panel2);
+  border:1px solid var(--border);color:var(--text);
+  font-family:'Fira Code',monospace;font-size:1rem;
+  outline:none;transition:border-color 0.2s;-moz-appearance:textfield;
+}
+.rgb-group input::-webkit-outer-spin-button,
+.rgb-group input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.rgb-group input:focus{border-color:rgb(var(--col));}
+.sep{color:var(--dim);font-size:1.3rem;padding-bottom:2px;}
+.hex-group{display:flex;flex-direction:column;gap:5px;}
+.hex-group label{font-size:0.62rem;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+.hex-group input{
+  width:108px;padding:9px 11px;background:var(--panel2);
+  border:1px solid var(--border);color:var(--text);
+  font-family:'Fira Code',monospace;font-size:1rem;
+  outline:none;transition:border-color 0.2s;text-transform:uppercase;
+}
+.hex-group input:focus{border-color:rgb(var(--col));}
+.color-picker-wrap{align-self:flex-end;}
+input[type="color"]{width:48px;height:44px;border:1px solid var(--border);cursor:pointer;background:none;padding:2px;}
+
+/* ADAPTIVE PANEL */
+.adaptive-panel{
+  display:none;gap:0;margin-bottom:32px;
+  border:1px solid rgba(var(--col),0.25);overflow:hidden;
+  transition:border-color 0.8s;
+}
+.adapt-swatch{width:200px;min-height:200px;flex-shrink:0;position:relative;transition:background 0.8s,box-shadow 0.8s;}
+.adapt-swatch-inner{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:14px;}
+.adapt-codes{
+  flex:1;padding:22px 26px;background:rgba(var(--col),0.06);
+  display:flex;flex-direction:column;gap:9px;justify-content:center;
+  transition:background 0.8s;
+}
+.code-row{display:flex;align-items:center;gap:10px;}
+.code-tag{font-size:0.62rem;letter-spacing:2px;color:var(--dim);text-transform:uppercase;min-width:30px;}
+.code-val{
+  font-size:1rem;color:var(--text);cursor:pointer;
+  border-bottom:1px dashed var(--border);padding-bottom:1px;
+  transition:color 0.15s,border-color 0.15s;
+}
+.code-val:hover{color:rgb(var(--col));border-color:rgb(var(--col));}
+.adapt-hsl{font-size:0.75rem;color:var(--dim);}
+.comp-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.65rem;letter-spacing:1.5px;color:var(--dim);margin-top:4px;}
+.comp-dot{width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);flex-shrink:0;transition:background 0.8s;}
+
+/* SECTION TITLE */
+.section-title{
+  font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;
+  letter-spacing:4px;text-transform:uppercase;color:var(--dim);
+  margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.section-title::before{content:'//';color:rgb(var(--col));transition:color 0.8s;}
+
+/* SCALE */
+.scale-wrap{display:none;margin-bottom:32px;}
+.scale-bar{display:flex;height:38px;border:1px solid var(--border);overflow:hidden;margin-bottom:6px;}
+.scale-seg{flex:1;cursor:pointer;transition:flex 0.25s;}
+.scale-seg:hover{flex:2.5;}
+.scale-labels{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--dim);letter-spacing:1px;padding:0 2px;}
+
+/* TONE GRID */
+.tones-wrap{display:none;margin-bottom:40px;}
+.tone-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+  gap:0;border:1px solid var(--border);overflow:visible;
+}
+.tone-card{position:relative;cursor:pointer;overflow:visible;}
+.tone-swatch{height:128px;transition:height 0.2s;position:relative;}
+.tone-card:hover .tone-swatch{height:152px;}
+.swatch-hsl-badge{
+  position:absolute;bottom:6px;right:7px;
+  font-size:0.56rem;font-family:'Fira Code',monospace;
+  letter-spacing:0.4px;opacity:0.65;line-height:1.3;text-align:right;
+}
+.tone-info{background:var(--panel2);padding:9px 11px 11px;border-top:1px solid var(--border);}
+.tone-role{
+  font-family:'Syne',sans-serif;font-size:0.67rem;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:4px;transition:color 0.8s;
+}
+.tone-hex{font-size:0.83rem;color:#e8e4f0;margin-bottom:2px;}
+.tone-rgb{font-size:0.7rem;color:#7a7090;}
+
+/* TOOLTIP */
+.tone-tooltip{
+  display:none;position:absolute;
+  bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  width:256px;background:#13111e;border:1px solid rgb(var(--col));
+  padding:14px 15px;z-index:300;
+  box-shadow:0 8px 32px rgba(0,0,0,0.7),0 0 24px rgba(var(--col),0.15);
+  pointer-events:none;transition:border-color 0.8s;
+}
+.tone-card:hover .tone-tooltip{display:block;animation:popUp 0.16s ease;}
+@keyframes popUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.tone-tooltip::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:7px solid transparent;border-top-color:rgb(var(--col));transition:border-top-color 0.8s;
+}
+.tt-theory{
+  font-size:0.66rem;color:#9888c0;line-height:1.45;
+  margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid var(--border);font-style:italic;
+}
+.tt-title{
+  font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  color:rgb(var(--col));margin-bottom:8px;transition:color 0.8s;
+}
+.tt-actions{list-style:none;display:flex;flex-direction:column;gap:4px;}
+.tt-actions li{font-size:0.7rem;color:#c0b8d8;line-height:1.4;display:flex;gap:6px;align-items:flex-start;}
+.tt-actions li::before{content:'→';color:rgb(var(--col));flex-shrink:0;transition:color 0.8s;}
+
+/* HISTORY */
+.history-wrap{margin-top:50px;}
+.history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
+.history-item{
+  border:1px solid var(--border);cursor:pointer;overflow:hidden;
+  transition:border-color 0.2s,transform 0.2s;
+}
+.history-item:hover{border-color:rgb(var(--col));transform:translateY(-2px);}
+.history-strip{display:flex;height:56px;}
+.history-seg{flex:1;}
+.history-meta{
+  padding:8px 11px;background:var(--panel2);
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid var(--border);
+}
+.history-hex{font-size:0.75rem;color:var(--text);}
+.history-arrow{font-size:0.9rem;transition:color 0.8s;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgb(var(--col));color:#0a0a0c;
+  font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;
+  letter-spacing:2px;padding:9px 24px;
+  opacity:0;transition:all 0.3s;pointer-events:none;z-index:1000;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.footer{text-align:center;margin-top:60px;font-size:0.68rem;color:var(--dim);letter-spacing:2px;}
+</style>
+</head>
+<body>
+
+<div class="orb orb-1" id="orb1"></div>
+<div class="orb orb-2" id="orb2"></div>
+<div class="orb orb-3" id="orb3"></div>
+
+<div class="wrap">
+
+  <header>
+    <div class="logo-block">
+      <h1>LU<span class="accent">MINA</span></h1>
+      <p class="logo-sub" id="logoSub">// Explorador de tonos · luces · sombras</p>
+    </div>
+    <div class="hdr-btns">
+      <button class="lang-btn active" data-lang="es" onclick="setLang('es')">ES</button>
+      <button class="lang-btn" data-lang="en"  onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="pt"  onclick="setLang('pt')">PT</button>
+      <button class="lang-btn" data-lang="fr"  onclick="setLang('fr')">FR</button>
+      <button class="lang-btn" data-lang="de"  onclick="setLang('de')">DE</button>
+      <button class="btn btn-outline" id="btnPng" onclick="downloadPNG()" style="display:none">⬇ PNG</button>
+    </div>
+  </header>
+
+  <div class="input-section">
+    <div class="input-label" id="inputLabel">// Ingresa tu color base</div>
+    <div class="input-row">
+      <div class="rgb-group"><label>R</label><input type="number" id="inR" min="0" max="255" value="120" oninput="syncFromRgb()"></div>
+      <span class="sep">·</span>
+      <div class="rgb-group"><label>G</label><input type="number" id="inG" min="0" max="255" value="80"  oninput="syncFromRgb()"></div>
+      <span class="sep">·</span>
+      <div class="rgb-group"><label>B</label><input type="number" id="inB" min="0" max="255" value="220" oninput="syncFromRgb()"></div>
+      <div class="hex-group"><label>HEX</label><input type="text" id="inHex" value="#7850DC" maxlength="7" oninput="syncFromHex()"></div>
+      <div class="color-picker-wrap"><input type="color" id="colorPicker" value="#7850DC" oninput="syncFromPicker()"></div>
+      <button class="btn btn-accent" id="btnGen" onclick="generate()">▶ Explorar</button>
+    </div>
+  </div>
+
+  <div class="adaptive-panel" id="adaptPanel" style="display:none;flex-direction:row">
+    <div class="adapt-swatch" id="adaptSwatch">
+      <div class="adapt-swatch-inner">
+        <div class="comp-badge">
+          <div class="comp-dot" id="compDot"></div>
+          <span id="compLabel">Complementario</span>
+        </div>
+      </div>
+    </div>
+    <div class="adapt-codes">
+      <div class="adapt-hsl" id="adaptHsl">—</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+        <div class="code-row"><span class="code-tag">HEX</span><span class="code-val" id="cHex" style="cursor:pointer">—</span></div>
+        <div class="code-row"><span class="code-tag">RGB</span><span class="code-val" id="cRgb" style="cursor:pointer">—</span></div>
+        <div class="code-row"><span class="code-tag">HSL</span><span class="code-val" id="cHsl" style="cursor:pointer">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scale-wrap" id="scaleWrap">
+    <div class="section-title" id="scaleTitle">Escala cromática de luminosidad</div>
+    <div class="scale-bar" id="scaleBar"></div>
+    <div class="scale-labels">
+      <span id="labelDark">SOMBRA PROFUNDA</span>
+      <span id="labelBase">COLOR BASE</span>
+      <span id="labelLight">BRILLO MÁXIMO</span>
+    </div>
+  </div>
+
+  <div class="tones-wrap" id="tonesWrap">
+    <div class="section-title" id="tonesTitle">Paleta de tonos generada</div>
+    <div class="tone-grid" id="toneGrid"></div>
+  </div>
+
+  <div class="history-wrap" id="historyWrap" style="display:none">
+    <div class="section-title" id="historyTitle">Historial de paletas</div>
+    <div class="history-grid" id="historyGrid"></div>
+  </div>
+
+  <div class="footer">LUMINA · TONE EXPLORER</div>
+</div>
+
+<div class="toast" id="toast">COPIADO ✓</div>
+
+<script>
+// ══ COLOR MATH ══
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  let h,s,l=(max+min)/2;
+  if(max===min){h=s=0;}
+  else{
+    const d=max-min;
+    s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){
+      case r:h=((g-b)/d+(g<b?6:0))/6;break;
+      case g:h=((b-r)/d+2)/6;break;
+      case b:h=((r-g)/d+4)/6;break;
+    }
+  }
+  return[Math.round(h*360),Math.round(s*100),Math.round(l*100)];
+}
+
+function hslToRgb(h,s,l){
+  h=((h%360)+360)%360;s/=100;l/=100;
+  const a=s*Math.min(l,1-l);
+  const f=n=>{const k=(n+h/30)%12;return l-a*Math.max(-1,Math.min(k-3,9-k,1));};
+  return[Math.round(f(0)*255),Math.round(f(8)*255),Math.round(f(4)*255)];
+}
+
+function rgbToHex(r,g,b){
+  return'#'+[r,g,b].map(v=>clamp(Math.round(v),0,255).toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+
+function hexToRgb(hex){
+  hex=hex.replace('#','');
+  if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');
+  return[parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)];
+}
+
+function lerpHue(h1,h2,t){
+  let d=h2-h1;if(d>180)d-=360;if(d<-180)d+=360;
+  return((h1+d*t)%360+360)%360;
+}
+
+function contrastColor(r,g,b){
+  return(0.299*r+0.587*g+0.114*b)/255>0.5?'#0a0a0c':'#f0ecff';
+}
+
+// ══ CHROMATIC ENGINE ══
+function chromaTone(h,s,l,{hShift=0,sMult=1,lTarget,hBlend=0}){
+  const nh=Math.round((lerpHue(h,hShift,hBlend)+360)%360);
+  return hslToRgb(nh,Math.round(clamp(s*sMult,0,100)),Math.round(clamp(lTarget,0,100)));
+}
+
+function buildPalette(h,s,l){
+  const comp=(h+180)%360;
+  const isWarm=(h>=0&&h<90)||(h>=300&&h<=360);
+  const lightH=isWarm?(h+20)%360:(h-20+360)%360;
+  const shadowH=isWarm?(h+210)%360:(h+150)%360;
+  const sPeak=Math.min(s*1.18,100);
+  const Lx=I18N[currentLang];
+  return[
+    {id:'pure-white', role:Lx.roles[0], theory:Lx.theories[0].replace('{a}',Math.round(lightH)),
+     rgb:chromaTone(h,s,l,{hShift:lightH,hBlend:0.07,sMult:0.1,lTarget:96}), actions:Lx.actions[0]},
+    {id:'bright', role:Lx.roles[1], theory:Lx.theories[1].replace('{a}',Math.round(lightH)),
+     rgb:chromaTone(h,s,l,{hShift:lightH,hBlend:0.18,sMult:0.44,lTarget:Math.min(l+38,90)}), actions:Lx.actions[1]},
+    {id:'light', role:Lx.roles[2], theory:Lx.theories[2],
+     rgb:chromaTone(h,s,l,{hShift:lightH,hBlend:0.22,sMult:0.68,lTarget:Math.min(l+22,82)}), actions:Lx.actions[2]},
+    {id:'midlight', role:Lx.roles[3], theory:Lx.theories[3],
+     rgb:chromaTone(h,s,l,{hShift:lightH,hBlend:0.1,sMult:0.88,lTarget:Math.min(l+12,74)}), actions:Lx.actions[3]},
+    {id:'base', role:Lx.roles[4], theory:Lx.theories[4],
+     rgb:hslToRgb(h,s,l), actions:Lx.actions[4]},
+    {id:'midshadow', role:Lx.roles[5], theory:Lx.theories[5].replace('{a}',Math.round(shadowH)),
+     rgb:chromaTone(h,s,l,{hShift:shadowH,hBlend:0.12,sMult:1.12,lTarget:Math.max(l-14,15)}), actions:Lx.actions[5]},
+    {id:'shadow', role:Lx.roles[6], theory:Lx.theories[6].replace('{a}',Math.round(comp)),
+     rgb:chromaTone(h,s,l,{hShift:comp,hBlend:0.22,sMult:sPeak/Math.max(s,1),lTarget:Math.max(l-28,10)}), actions:Lx.actions[6]},
+    {id:'deep-shadow', role:Lx.roles[7], theory:Lx.theories[7].replace('{a}',Math.round(comp)),
+     rgb:chromaTone(h,s,l,{hShift:isWarm?(comp+15)%360:(comp-15+360)%360,hBlend:0.35,sMult:0.9,lTarget:Math.max(l-44,6)}), actions:Lx.actions[7]},
+    {id:'core-shadow', role:Lx.roles[8], theory:Lx.theories[8].replace('{a}',Math.round((comp+30)%360)),
+     rgb:chromaTone(h,s,l,{hShift:(comp+30)%360,hBlend:0.45,sMult:0.7,lTarget:Math.max(l-58,3)}), actions:Lx.actions[8]},
+  ];
+}
+
+// ══ i18n ══
+let currentLang='es';
+
+const I18N={
+  es:{
+    logoSub:'// Explorador de tonos · luces · sombras',
+    inputLabel:'// Ingresa tu color base',
+    btnExplore:'▶ Explorar', btnPng:'⬇ PNG',
+    compLabel:'Complementario',
+    scaleTitle:'Escala cromática de luminosidad',
+    labelDark:'SOMBRA PROFUNDA',labelBase:'COLOR BASE',labelLight:'BRILLO MÁXIMO',
+    tonesTitle:'Paleta de tonos generada',
+    historyTitle:'Historial de paletas',
+    ttTitle:'Acciones sugeridas',
+    copied:'COPIADO ✓',pngDl:'PNG DESCARGADO ✓',
+    emptyHistory:'Las paletas generadas aparecerán aquí',
+    roles:['Blanco tintado','Brillo máximo','Luz alta','Luz media','Color base','Sombra suave','Sombra media','Sombra profunda','Núcleo de sombra'],
+    theories:[
+      'Blanco tintado con análogo cálido ({a}°). La luz ambiental siempre tiene temperatura cromática.',
+      'Luz especular: matiz desplazado a {a}°, saturación baja. Simula reflejo de luz solar directa.',
+      'Luz directa con matiz cálido moderado. La luz real desatura y calienta el color.',
+      'Zona de transición luz→base. Halftone con matiz casi puro.',
+      'Color original sin modificaciones. Referencia cromática pura.',
+      'Primera sombra: matiz hacia split-complementario ({a}°). Saturación sube — efecto Purkinje.',
+      'Sombra real: complementario ({a}°) domina. Las sombras NUNCA son negras, tienen color.',
+      'Sombra profunda con tinte frío ({a}°). En oscuridad, azules y violetas dominan la percepción.',
+      'Núcleo de sombra: punto más oscuro. Complementario desplazado ({a}°) con máximo peso cromático.',
+    ],
+    actions:[
+      ['Fondo principal en interfaces claras','Espacio negativo con personalidad cromática','Highlight de luz ambiental difusa','Texto sobre fondos muy oscuros','Superficies reflectantes de alta exposición'],
+      ['Specular highlight en objetos 3D','Hover glow en botones de color','Zona de máxima exposición en ilustración','Punto focal de luz en composiciones','Reflejo en superficies brillantes'],
+      ['Área iluminada en pintura digital','Fondo de tarjetas en modo claro','Hover state de elementos activos','Gradiente de luz superior en botones','Variante clara del color de marca'],
+      ['Hover suave en componentes UI','Fondo de secciones secundarias','Tono medio en degradados de marca','Ícono en estado activo','Zona de halftone en ilustración'],
+      ['Color principal de marca o acento','Fondo de botones CTA','Títulos y encabezados','Bordes activos y delimitadores','Relleno principal de elementos UI'],
+      ['Sombra de contacto en objetos 3D','Estado active/pressed en botones','Borde inferior de relieve','Fondo de menús y popovers','Separadores de sección'],
+      ['Drop-shadow coloreada en UI','Sombra lateral en renders','Fondo de paneles oscuros','Texto secundario sobre fondos claros','Gradiente inferior en botones en relieve'],
+      ['Sombra máxima en 3D','Ambient occlusion en renders','Fondo de modales oscuros','Borde que define siluetas','Sombra paralela en diseño plano'],
+      ['Core shadow en esferas 3D','Oscuridad máxima en pintura digital','Fondo de terminales','Base de escenas nocturnas','Navbar en dark mode alto contraste'],
+    ]
+  },
+  en:{
+    logoSub:'// Tone · Light · Shadow Explorer',
+    inputLabel:'// Enter your base color',
+    btnExplore:'▶ Explore', btnPng:'⬇ PNG',
+    compLabel:'Complementary',
+    scaleTitle:'Chromatic luminosity scale',
+    labelDark:'DEEP SHADOW',labelBase:'BASE COLOR',labelLight:'MAX HIGHLIGHT',
+    tonesTitle:'Generated tone palette',
+    historyTitle:'Palette history',
+    ttTitle:'Suggested uses',
+    copied:'COPIED ✓',pngDl:'PNG DOWNLOADED ✓',
+    emptyHistory:'Generated palettes will appear here',
+    roles:['Tinted white','Max highlight','High light','Mid light','Base color','Soft shadow','Mid shadow','Deep shadow','Core shadow'],
+    theories:[
+      'White tinted with warm analog ({a}°). Ambient light always carries chromatic temperature.',
+      'Specular highlight: hue shifted to {a}°, low saturation. Simulates direct sunlight reflection.',
+      'Direct light with moderately warm hue. Real light desaturates and warms the color.',
+      'Light→base transition zone. Halftone with nearly pure hue.',
+      'Original color unmodified. Pure chromatic reference point.',
+      'First shadow: hue toward split-complementary ({a}°). Saturation rises — Purkinje effect.',
+      'Real shadow: complementary ({a}°) dominates. Shadows are NEVER black, they have color.',
+      'Deep shadow with cool tint ({a}°). In darkness, blues and violets dominate perception.',
+      'Core shadow: darkest point. Displaced complementary ({a}°) with maximum chromatic weight.',
+    ],
+    actions:[
+      ['Main background in light interfaces','Negative space with chromatic personality','Diffuse ambient light highlight','Text on very dark backgrounds','High-exposure reflective surfaces'],
+      ['Specular highlight on 3D objects','Hover glow on colored buttons','Max exposure zone in illustration','Focal point of light in compositions','Reflection on shiny surfaces'],
+      ['Lit area in digital painting','Card background in light mode','Hover state for active elements','Top light gradient on buttons','Light brand color variant'],
+      ['Soft hover on UI components','Secondary section backgrounds','Mid tone in brand gradients','Icon in active state','Halftone area in illustration'],
+      ['Main brand or accent color','CTA button background','Titles and headings','Active borders and dividers','Main UI element fill'],
+      ['Contact shadow on 3D objects','Active/pressed state on buttons','Bottom relief border','Menu and popover backgrounds','Section separators'],
+      ['Colored drop-shadow in UI','Lateral shadow in renders','Dark panel backgrounds','Secondary text on light backgrounds','Bottom gradient on relief buttons'],
+      ['Maximum shadow in 3D','Ambient occlusion in renders','Dark modal backgrounds','Border defining silhouettes','Drop shadow in flat design'],
+      ['Core shadow on 3D spheres','Maximum darkness in digital painting','Terminal backgrounds','Base of night scenes','High-contrast dark mode navbar'],
+    ]
+  },
+  pt:{
+    logoSub:'// Explorador de tons · luzes · sombras',
+    inputLabel:'// Insira sua cor base',
+    btnExplore:'▶ Explorar', btnPng:'⬇ PNG',
+    compLabel:'Complementar',
+    scaleTitle:'Escala cromática de luminosidade',
+    labelDark:'SOMBRA PROFUNDA',labelBase:'COR BASE',labelLight:'BRILHO MÁXIMO',
+    tonesTitle:'Paleta de tons gerada',
+    historyTitle:'Histórico de paletas',
+    ttTitle:'Usos sugeridos',
+    copied:'COPIADO ✓',pngDl:'PNG BAIXADO ✓',
+    emptyHistory:'As paletas geradas aparecerão aqui',
+    roles:['Branco tintado','Brilho máximo','Luz alta','Luz média','Cor base','Sombra suave','Sombra média','Sombra profunda','Núcleo de sombra'],
+    theories:[
+      'Branco tintado com análogo quente ({a}°). A luz ambiente sempre tem temperatura cromática.',
+      'Highlight especular: matiz deslocado para {a}°, baixa saturação. Simula reflexo de luz solar.',
+      'Luz direta com matiz quente moderado. A luz real dessatura e aquece a cor.',
+      'Zona de transição luz→base. Halftone com matiz quase puro.',
+      'Cor original sem modificações. Referência cromática pura.',
+      'Primeira sombra: matiz para split-complementar ({a}°). Saturação sobe — efeito Purkinje.',
+      'Sombra real: complementar ({a}°) domina. Sombras NUNCA são pretas, têm cor.',
+      'Sombra profunda com tinte frio ({a}°). No escuro, azuis e violetas dominam a percepção.',
+      'Núcleo de sombra: ponto mais escuro. Complementar deslocado ({a}°) com peso cromático máximo.',
+    ],
+    actions:[
+      ['Fundo principal em interfaces claras','Espaço negativo com personalidade','Highlight de luz ambiente difusa','Texto sobre fundos muito escuros','Superfícies reflexivas de alta exposição'],
+      ['Specular highlight em objetos 3D','Hover glow em botões coloridos','Zona de máxima exposição em ilustração','Ponto focal de luz em composições','Reflexo em superfícies brilhantes'],
+      ['Área iluminada em pintura digital','Fundo de cards em modo claro','Hover state de elementos ativos','Gradiente de luz superior em botões','Variante clara da cor da marca'],
+      ['Hover suave em componentes UI','Fundo de seções secundárias','Tom médio em gradientes da marca','Ícone em estado ativo','Área de halftone em ilustração'],
+      ['Cor principal de marca ou acento','Fundo de botões CTA','Títulos e cabeçalhos','Bordas ativas e divisores','Preenchimento principal de UI'],
+      ['Sombra de contato em objetos 3D','Estado active/pressed em botões','Borda inferior de relevo','Fundo de menus e popovers','Separadores de seção'],
+      ['Drop-shadow colorida em UI','Sombra lateral em renders','Fundo de painéis escuros','Texto secundário sobre fundos claros','Gradiente inferior em botões em relevo'],
+      ['Sombra máxima em 3D','Oclusão ambiente em renders','Fundo de modais escuros','Borda que define silhuetas','Sombra paralela em design plano'],
+      ['Core shadow em esferas 3D','Escuridão máxima em pintura digital','Fundo de terminais','Base de cenas noturnas','Navbar em dark mode alto contraste'],
+    ]
+  },
+  fr:{
+    logoSub:'// Explorateur de tons · lumières · ombres',
+    inputLabel:'// Entrez votre couleur de base',
+    btnExplore:'▶ Explorer', btnPng:'⬇ PNG',
+    compLabel:'Complémentaire',
+    scaleTitle:'Échelle chromatique de luminosité',
+    labelDark:'OMBRE PROFONDE',labelBase:'COULEUR BASE',labelLight:'LUMINOSITÉ MAX',
+    tonesTitle:'Palette de tons générée',
+    historyTitle:'Historique des palettes',
+    ttTitle:'Utilisations suggérées',
+    copied:'COPIÉ ✓',pngDl:'PNG TÉLÉCHARGÉ ✓',
+    emptyHistory:'Les palettes générées apparaîtront ici',
+    roles:['Blanc teinté','Éclat maximum','Lumière haute','Lumière moyenne','Couleur base','Ombre douce','Ombre moyenne','Ombre profonde','Noyau d\'ombre'],
+    theories:[
+      'Blanc teinté d\'analogue chaud ({a}°). La lumière ambiante a toujours une température chromatique.',
+      'Highlight spéculaire: teinte décalée à {a}°, faible saturation. Simule la réflexion solaire.',
+      'Lumière directe avec teinte chaude modérée. La lumière réelle désature et réchauffe.',
+      'Zone de transition lumière→base. Demi-teinte avec teinte presque pure.',
+      'Couleur originale sans modification. Point de référence chromatique pur.',
+      'Première ombre: teinte vers split-complémentaire ({a}°). Saturation monte — effet Purkinje.',
+      'Ombre réelle: complémentaire ({a}°) domine. Les ombres ne sont JAMAIS noires, elles ont une couleur.',
+      'Ombre profonde avec teinte froide ({a}°). Dans l\'obscurité, bleus et violets dominent la perception.',
+      'Noyau d\'ombre: point le plus sombre. Complémentaire déplacé ({a}°) avec poids chromatique maximum.',
+    ],
+    actions:[
+      ['Fond principal en interfaces claires','Espace négatif avec personnalité','Highlight de lumière ambiante diffuse','Texte sur fonds très sombres','Surfaces réfléchissantes haute exposition'],
+      ['Highlight spéculaire sur objets 3D','Hover glow sur boutons colorés','Zone d\'exposition max en illustration','Point focal de lumière en compositions','Reflet sur surfaces brillantes'],
+      ['Zone éclairée en peinture numérique','Fond de cartes en mode clair','Hover state des éléments actifs','Dégradé de lumière sur boutons','Variante claire de la couleur de marque'],
+      ['Hover doux sur composants UI','Fond de sections secondaires','Ton moyen dans dégradés de marque','Icône en état actif','Zone de demi-teinte en illustration'],
+      ['Couleur principale de marque','Fond de boutons CTA','Titres et en-têtes','Bordures actives et séparateurs','Remplissage principal UI'],
+      ['Ombre de contact sur objets 3D','État active/pressé sur boutons','Bord inférieur de relief','Fond de menus et popovers','Séparateurs de sections'],
+      ['Drop-shadow colorée en UI','Ombre latérale en renders','Fond de panneaux sombres','Texte secondaire sur fonds clairs','Dégradé inférieur sur boutons en relief'],
+      ['Ombre maximale en 3D','Occlusion ambiante en renders','Fond de modales sombres','Bordure définissant les silhouettes','Ombre portée en design plat'],
+      ['Core shadow sur sphères 3D','Obscurité max en peinture numérique','Fond de terminaux','Base de scènes nocturnes','Navbar dark mode haut contraste'],
+    ]
+  },
+  de:{
+    logoSub:'// Ton · Licht · Schatten Explorer',
+    inputLabel:'// Gib deine Basisfarbe ein',
+    btnExplore:'▶ Erkunden', btnPng:'⬇ PNG',
+    compLabel:'Komplementär',
+    scaleTitle:'Chromatische Helligkeitsskala',
+    labelDark:'TIEFSTER SCHATTEN',labelBase:'BASISFARBE',labelLight:'MAX HELLIGKEIT',
+    tonesTitle:'Generierte Tonpalette',
+    historyTitle:'Palettenverlauf',
+    ttTitle:'Vorgeschlagene Verwendungen',
+    copied:'KOPIERT ✓',pngDl:'PNG HERUNTERGELADEN ✓',
+    emptyHistory:'Generierte Paletten erscheinen hier',
+    roles:['Getöntes Weiß','Max Glanz','Hohes Licht','Mittleres Licht','Basisfarbe','Weicher Schatten','Mittlerer Schatten','Tiefer Schatten','Kernschatten'],
+    theories:[
+      'Weiß mit warmem Analogton ({a}°). Umgebungslicht hat immer chromatische Temperatur.',
+      'Spekulares Highlight: Farbton zu {a}° verschoben, niedrige Sättigung. Simuliert Sonnenlicht.',
+      'Direktes Licht mit mäßig warmem Farbton. Reales Licht desaturiert und erwärmt.',
+      'Licht→Basis Übergangszone. Halbton mit fast reinem Farbton.',
+      'Originalfarbe unverändert. Reiner chromatischer Referenzpunkt.',
+      'Erster Schatten: Farbton zu Split-Komplementär ({a}°). Sättigung steigt — Purkinje-Effekt.',
+      'Echter Schatten: Komplementär ({a}°) dominiert. Schatten sind NIE schwarz, sie haben Farbe.',
+      'Tiefer Schatten mit kühlem Stich ({a}°). Im Dunkeln dominieren Blau und Violett die Wahrnehmung.',
+      'Kernschatten: dunkelster Punkt. Verschobenes Komplementär ({a}°) mit maximalem chromatischem Gewicht.',
+    ],
+    actions:[
+      ['Haupthintergrund in hellen Interfaces','Negativraum mit chromatischer Persönlichkeit','Diffuses Umgebungslicht-Highlight','Text auf sehr dunklen Hintergründen','Hochbelichtete Reflexionsflächen'],
+      ['Spekulares Highlight auf 3D-Objekten','Hover-Glanz auf farbigen Buttons','Max. Belichtungszone in Illustration','Licht-Fokuspunkt in Kompositionen','Reflexion auf glänzenden Flächen'],
+      ['Beleuchtete Zone in digitaler Malerei','Karten-Hintergrund im hellen Modus','Hover-State aktiver Elemente','Oberes Lichtgradient auf Buttons','Helle Markenfarb-Variante'],
+      ['Sanfter Hover auf UI-Komponenten','Sekundäre Abschnittshintergründe','Mittelton in Markenfarbverläufen','Symbol im aktiven Zustand','Halbtonbereich in Illustration'],
+      ['Hauptmarken- oder Akzentfarbe','CTA-Button-Hintergrund','Überschriften und Titel','Aktive Rahmen und Trennlinien','Haupt-UI-Element-Füllung'],
+      ['Kontaktschatten auf 3D-Objekten','Aktiver/gedrückter Zustand auf Buttons','Unterer Reliefrand','Menü- und Popover-Hintergründe','Abschnittstrennlinien'],
+      ['Farbiger Drop-Shadow in UI','Seitliche Schattenfläche in Renders','Dunkle Panel-Hintergründe','Sekundärtext auf hellen Hintergründen','Unterer Gradient auf Relief-Buttons'],
+      ['Maximaler Schatten in 3D','Ambiente Okklusion in Renders','Dunkle Modal-Hintergründe','Dunkler Rand zur Silhouettendefinition','Schlagschatten im flachen Design'],
+      ['Kernschatten auf kugelförmigen 3D-Objekten','Maximale Dunkelheit in digitaler Malerei','Terminal-Hintergründe','Basis für Nachtszenen','Hoher Kontrast Dark-Mode Navbar'],
+    ]
+  },
+};
+
+function Lx(){return I18N[currentLang]||I18N.es;}
+
+function setLang(lang){
+  currentLang=lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+  applyLangUI();
+  if(currentHex)generate();
+}
+
+function applyLangUI(){
+  const l=Lx();
+  document.getElementById('logoSub').textContent=l.logoSub;
+  document.getElementById('inputLabel').textContent=l.inputLabel;
+  document.getElementById('btnGen').textContent=l.btnExplore;
+  document.getElementById('btnPng').textContent=l.btnPng;
+  document.getElementById('compLabel').textContent=l.compLabel;
+  document.getElementById('scaleTitle').textContent=l.scaleTitle;
+  document.getElementById('labelDark').textContent=l.labelDark;
+  document.getElementById('labelBase').textContent=l.labelBase;
+  document.getElementById('labelLight').textContent=l.labelLight;
+  document.getElementById('tonesTitle').textContent=l.tonesTitle;
+  document.getElementById('historyTitle').textContent=l.historyTitle;
+}
+
+// ══ SYNC INPUTS ══
+function syncFromRgb(){
+  const r=clamp(parseInt(document.getElementById('inR').value)||0,0,255);
+  const g=clamp(parseInt(document.getElementById('inG').value)||0,0,255);
+  const b=clamp(parseInt(document.getElementById('inB').value)||0,0,255);
+  const hex=rgbToHex(r,g,b);
+  document.getElementById('inHex').value=hex;
+  document.getElementById('colorPicker').value=hex;
+}
+function syncFromHex(){
+  const hex=document.getElementById('inHex').value;
+  if(!/^#?[0-9a-fA-F]{6}$/.test(hex))return;
+  const full=hex.startsWith('#')?hex:'#'+hex;
+  const[r,g,b]=hexToRgb(full);
+  document.getElementById('inR').value=r;
+  document.getElementById('inG').value=g;
+  document.getElementById('inB').value=b;
+  document.getElementById('colorPicker').value=full;
+}
+function syncFromPicker(){
+  const hex=document.getElementById('colorPicker').value;
+  const[r,g,b]=hexToRgb(hex);
+  document.getElementById('inR').value=r;
+  document.getElementById('inG').value=g;
+  document.getElementById('inB').value=b;
+  document.getElementById('inHex').value=hex.toUpperCase();
+}
+
+// ══ ADAPTIVE THEME ══
+function applyTheme(r,g,b,h,s,l){
+  const comp=(h+180)%360;
+  const[cr,cg,cb]=hslToRgb(comp,s,l);
+  document.documentElement.style.setProperty('--col',`${r},${g},${b}`);
+  document.getElementById('orb1').style.background=`rgba(${r},${g},${b},0.09)`;
+  document.getElementById('orb2').style.background=`rgba(${cr},${cg},${cb},0.06)`;
+  document.getElementById('orb3').style.background=`rgba(${r},${g},${b},0.04)`;
+  document.getElementById('compDot').style.background=`rgb(${cr},${cg},${cb})`;
+}
+
+// ══ HISTORY ══
+let history=[];
+let currentHex=null;
+let currentPaletteData=null;
+
+function saveHistory(hex,palette){
+  // Avoid exact duplicates
+  if(history.length&&history[0].hex===hex)return;
+  history.unshift({hex,palette:[...palette]});
+  if(history.length>16)history.pop();
+  renderHistory();
+  document.getElementById('historyWrap').style.display='block';
+}
+
+function renderHistory(){
+  const grid=document.getElementById('historyGrid');
+  if(!history.length){
+    grid.innerHTML=`<div style="color:var(--dim);font-size:0.75rem;letter-spacing:2px;padding:20px 0">${Lx().emptyHistory}</div>`;
+    return;
+  }
+  const[br,bg,bb]=hexToRgb(currentHex||'#7850DC');
+  grid.innerHTML=history.map((item,i)=>{
+    const strips=item.palette.map(def=>{
+      const[r,g,b]=def.rgb;return`<div class="history-seg" style="background:rgb(${r},${g},${b})"></div>`;
+    }).join('');
+    return`<div class="history-item" onclick="loadHistory(${i})">
+      <div class="history-strip">${strips}</div>
+      <div class="history-meta">
+        <span class="history-hex">${item.hex}</span>
+        <span class="history-arrow" style="color:rgb(${br},${bg},${bb})">→</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadHistory(i){
+  const item=history[i];
+  const[r,g,b]=hexToRgb(item.hex);
+  document.getElementById('inR').value=r;
+  document.getElementById('inG').value=g;
+  document.getElementById('inB').value=b;
+  document.getElementById('inHex').value=item.hex;
+  document.getElementById('colorPicker').value=item.hex;
+  generate();
+}
+
+// ══ GENERATE ══
+function generate(){
+  const r=clamp(parseInt(document.getElementById('inR').value)||0,0,255);
+  const g=clamp(parseInt(document.getElementById('inG').value)||0,0,255);
+  const b=clamp(parseInt(document.getElementById('inB').value)||0,0,255);
+  const[h,s,l]=rgbToHsl(r,g,b);
+  const hex=rgbToHex(r,g,b);
+  const comp=(h+180)%360;
+  currentHex=hex;
+
+  applyTheme(r,g,b,h,s,l);
+
+  // Base panel
+  const swatch=document.getElementById('adaptSwatch');
+  swatch.style.background=hex;
+  swatch.style.boxShadow=`0 0 60px rgba(${r},${g},${b},0.4),0 0 120px rgba(${r},${g},${b},0.12)`;
+  document.getElementById('adaptHsl').textContent=`hsl(${h}°, ${s}%, ${l}%) · ${Lx().compLabel}: ${Math.round(comp)}°`;
+
+  const hexVal   = hex;
+  const rgbVal   = `rgb(${r}, ${g}, ${b})`;
+  const hslVal   = `hsl(${h}°, ${s}%, ${l}%)`;
+
+  const elHex=document.getElementById('cHex');
+  const elRgb=document.getElementById('cRgb');
+  const elHsl=document.getElementById('cHsl');
+  elHex.textContent=hexVal;   elHex.onclick=()=>copyText(hexVal);
+  elRgb.textContent=rgbVal;   elRgb.onclick=()=>copyText(rgbVal);
+  elHsl.textContent=hslVal;   elHsl.onclick=()=>copyText(hslVal);
+  document.getElementById('adaptPanel').style.display='flex';
+
+  // Scale bar
+  const scaleBar=document.getElementById('scaleBar');
+  scaleBar.innerHTML='';
+  for(let i=0;i<=28;i++){
+    const pct=i/28;
+    const sl2=Math.round(4+pct*92);
+    const hB=pct<0.5?(1-pct*2)*0.15:(pct-0.5)*2*0.32;
+    const hD=pct<0.5?comp:(h+20)%360;
+    const sh2=lerpHue(h,hD,hB);
+    const ss2=pct<0.5?Math.min(s*1.1,100):s*(0.5+pct*0.5);
+    const[sr,sg,sb]=hslToRgb(sh2,ss2,sl2);
+    const seg=document.createElement('div');
+    seg.className='scale-seg';
+    seg.style.background=`rgb(${sr},${sg},${sb})`;
+    seg.title=`L=${sl2}° H=${Math.round(sh2)}°`;
+    seg.onclick=()=>copyText(rgbToHex(sr,sg,sb));
+    scaleBar.appendChild(seg);
+  }
+  document.getElementById('scaleWrap').style.display='block';
+
+  // Tone cards
+  const palette=buildPalette(h,s,l);
+  currentPaletteData={hex,h,s,l,r,g,b,palette};
+  const grid=document.getElementById('toneGrid');
+  grid.innerHTML='';
+
+  // Use a legible accent — if base color is very dark, use a lighter tint of it
+  const [,, baseLum]=rgbToHsl(r,g,b);
+  const roleColor = baseLum < 28
+    ? `hsl(${h},${Math.min(s,80)}%,65%)`   // lift to visible lightness
+    : `rgb(${r},${g},${b})`;
+
+  palette.forEach(def=>{
+    const[tr,tg,tb]=def.rgb;
+    // Capture copies of the exact values for this iteration in const
+    const copyHex = rgbToHex(tr,tg,tb);
+    const copyRgb = `rgb(${tr}, ${tg}, ${tb})`;
+    const[th,ts,tl]=rgbToHsl(tr,tg,tb);
+    const badgeTxt=contrastColor(tr,tg,tb);
+    const isBase=def.id==='base';
+
+    // ── card container ──
+    const card=document.createElement('div');
+    card.className='tone-card';
+    if(isBase){card.style.outline=`2px solid ${roleColor}`;card.style.outlineOffset='-2px';card.style.zIndex='2';}
+
+    // ── tooltip ──
+    const tooltip=document.createElement('div');
+    tooltip.className='tone-tooltip';
+    const ttTitle=document.createElement('div');ttTitle.className='tt-title';ttTitle.textContent=Lx().ttTitle;
+    const ttTheory=document.createElement('div');ttTheory.className='tt-theory';ttTheory.textContent=def.theory;
+    const ttList=document.createElement('ul');ttList.className='tt-actions';
+    def.actions.forEach(a=>{const li=document.createElement('li');li.textContent=a;ttList.appendChild(li);});
+    tooltip.appendChild(ttTitle);tooltip.appendChild(ttTheory);tooltip.appendChild(ttList);
+    card.appendChild(tooltip);
+
+    // ── swatch ──
+    const swatchEl=document.createElement('div');
+    swatchEl.className='tone-swatch';
+    swatchEl.style.background=copyHex;
+    const badge=document.createElement('div');
+    badge.className='swatch-hsl-badge';
+    badge.style.color=badgeTxt;
+    badge.textContent=`H${Math.round(th)}° S${Math.round(ts)}% L${Math.round(tl)}%`;
+    swatchEl.appendChild(badge);
+    swatchEl.addEventListener('click', function(e){
+      e.stopPropagation();
+      copyText(copyHex);
+    });
+    card.appendChild(swatchEl);
+
+    // ── info panel ──
+    const infoEl=document.createElement('div');
+    infoEl.className='tone-info';
+
+    const roleEl=document.createElement('div');roleEl.className='tone-role';
+    roleEl.style.color=roleColor;roleEl.textContent=def.role;
+
+    const hexEl=document.createElement('div');hexEl.className='tone-hex';
+    hexEl.style.cursor='pointer';hexEl.textContent=copyHex;
+    hexEl.addEventListener('click', function(e){
+      e.stopPropagation();
+      copyText(copyHex);
+    });
+
+    const rgbEl=document.createElement('div');rgbEl.className='tone-rgb';
+    rgbEl.style.cursor='pointer';rgbEl.textContent=copyRgb;
+    rgbEl.addEventListener('click', function(e){
+      e.stopPropagation();
+      copyText(copyRgb);
+    });
+
+    infoEl.appendChild(roleEl);infoEl.appendChild(hexEl);infoEl.appendChild(rgbEl);
+    card.appendChild(infoEl);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('tonesWrap').style.display='block';
+  document.getElementById('btnPng').style.display='';
+  saveHistory(hex,palette);
+  setTimeout(()=>document.getElementById('adaptPanel').scrollIntoView({behavior:'smooth',block:'start'}),80);
+}
+
+// ══ DOWNLOAD PNG ══
+function downloadPNG(){
+  if(!currentPaletteData)return;
+  const{hex,h,s,l,r:br,g:bg,b:bb,palette}=currentPaletteData;
+  const comp=(h+180)%360;
+  const N=palette.length;
+  const PAD=48,CELL_W=200,SWATCH_H=220,INFO_H=92;
+  const HEADER_H=198,FOOTER_H=44;
+  const W=PAD*2+N*CELL_W;
+  const H=HEADER_H+(SWATCH_H+INFO_H)+PAD+FOOTER_H;
+
+  const cv=document.createElement('canvas');
+  cv.width=W;cv.height=H;
+  const cx=cv.getContext('2d');
+
+  // BG
+  cx.fillStyle='#0a0a0c';cx.fillRect(0,0,W,H);
+
+  // Grid
+  const gs=44;
+  for(let x=0;x<=W;x+=gs){const c=palette[Math.floor(x/gs)%N];const[pr,pg,pb]=c.rgb;cx.strokeStyle=`rgba(${pr},${pg},${pb},0.09)`;cx.lineWidth=1;cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();}
+  for(let y=0;y<=H;y+=gs){const c=palette[Math.floor(y/gs)%N];const[pr,pg,pb]=c.rgb;cx.strokeStyle=`rgba(${pr},${pg},${pb},0.09)`;cx.lineWidth=1;cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}
+
+  // Scanlines
+  for(let y=0;y<H;y+=4){cx.fillStyle='rgba(255,255,255,0.014)';cx.fillRect(0,y+2,W,2);}
+
+  // Logo
+  cx.textAlign='left';
+  cx.font='bold 48px "Courier New",monospace';
+  cx.fillStyle=`rgb(${br},${bg},${bb})`;
+  cx.shadowColor=`rgba(${br},${bg},${bb},0.7)`;cx.shadowBlur=18;
+  cx.fillText('LUMINA',PAD,58);cx.shadowBlur=0;
+
+  // Accent line
+  cx.strokeStyle=`rgb(${br},${bg},${bb})`;cx.lineWidth=2;
+  cx.shadowColor=`rgba(${br},${bg},${bb},0.9)`;cx.shadowBlur=10;
+  cx.beginPath();cx.moveTo(PAD,68);cx.lineTo(PAD+320,68);cx.stroke();cx.shadowBlur=0;
+
+  // Base info
+  cx.font='15px "Courier New",monospace';
+  cx.fillStyle=`rgba(${br},${bg},${bb},0.85)`;
+  cx.fillText(`BASE: ${hex}   RGB: ${br},${bg},${bb}   HSL: ${h}°,${s}%,${l}%`,PAD,98);
+
+  cx.font='11px "Courier New",monospace';
+  cx.fillStyle='#5a5470';
+  cx.fillText(`${Lx().compLabel.toUpperCase()}: ${Math.round(comp)}°  ·  LUMINA TONE EXPLORER`,PAD,120);
+
+  // Divider
+  cx.strokeStyle='#222230';cx.lineWidth=1;
+  cx.beginPath();cx.moveTo(PAD,138);cx.lineTo(W-PAD,138);cx.stroke();
+
+  // Chromatic scale bar
+  const SBW=W-PAD*2,SBH=18,SBY=148;
+  for(let i=0;i<=50;i++){
+    const pct=i/50,sl2=Math.round(4+pct*92);
+    const hB=pct<0.5?(1-pct*2)*0.15:(pct-0.5)*2*0.32;
+    const hD=pct<0.5?comp:(h+20)%360;
+    const sh2=lerpHue(h,hD,hB);
+    const ss2=pct<0.5?Math.min(s*1.1,100):s*(0.5+pct*0.5);
+    const[sr,sg,sb]=hslToRgb(sh2,ss2,sl2);
+    cx.fillStyle=`rgb(${sr},${sg},${sb})`;
+    cx.fillRect(PAD+Math.floor(i*(SBW/50)),SBY,Math.ceil(SBW/50)+1,SBH);
+  }
+  cx.strokeStyle='rgba(255,255,255,0.05)';cx.lineWidth=1;cx.strokeRect(PAD,SBY,SBW,SBH);
+
+  // Swatches
+  palette.forEach((def,i)=>{
+    const[tr,tg,tb]=def.rgb;
+    const thex=rgbToHex(tr,tg,tb);
+    const[th2,ts2,tl2]=rgbToHsl(tr,tg,tb);
+    const x=PAD+i*CELL_W;
+    const y=HEADER_H;
+    const txtC=contrastColor(tr,tg,tb);
+
+    cx.fillStyle=thex;cx.fillRect(x,y,CELL_W,SWATCH_H);
+
+    // HSL badge
+    cx.fillStyle=txtC==='#0a0a0c'?'rgba(0,0,0,0.5)':'rgba(255,255,255,0.5)';
+    cx.font='9px "Courier New",monospace';cx.textAlign='right';
+    cx.fillText(`H${Math.round(th2)}° S${Math.round(ts2)}% L${Math.round(tl2)}%`,x+CELL_W-8,y+SWATCH_H-10);
+
+    if(def.id==='base'){
+      cx.strokeStyle=`rgb(${br},${bg},${bb})`;cx.lineWidth=3;
+      cx.strokeRect(x+1,y+1,CELL_W-2,SWATCH_H-2);
+    }
+
+    cx.fillStyle='#111115';cx.fillRect(x,y+SWATCH_H,CELL_W,INFO_H);
+    cx.strokeStyle='rgba(255,255,255,0.05)';cx.lineWidth=1;
+    cx.strokeRect(x,y,CELL_W,SWATCH_H+INFO_H);
+
+    const tx=x+CELL_W/2;cx.textAlign='center';
+    cx.font='bold 10px "Courier New",monospace';cx.fillStyle=`rgb(${br},${bg},${bb})`;
+    cx.fillText(def.role.toUpperCase(),tx,y+SWATCH_H+18);
+    cx.font='bold 14px "Courier New",monospace';cx.fillStyle='#e8e4f0';
+    cx.fillText(thex,tx,y+SWATCH_H+38);
+    cx.font='10px "Courier New",monospace';cx.fillStyle='#7a7090';
+    cx.fillText(`rgb(${tr}, ${tg}, ${tb})`,tx,y+SWATCH_H+56);
+    cx.fillStyle='#55506a';
+    cx.fillText(`hsl(${Math.round(th2)}°, ${Math.round(ts2)}%, ${Math.round(tl2)}%)`,tx,y+SWATCH_H+74);
+  });
+
+  cx.textAlign='center';cx.font='10px "Courier New",monospace';cx.fillStyle='#2a2538';
+  cx.fillText('LUMINA · TONE EXPLORER · Color Theory Engine',W/2,H-14);
+
+  const link=document.createElement('a');
+  link.download=`lumina_${hex.replace('#','')}.png`;
+  link.href=cv.toDataURL('image/png');
+  document.body.appendChild(link);link.click();document.body.removeChild(link);
+
+  showToast(Lx().pngDl);
+}
+
+// ══ UTILS ══
+function copyText(text){
+  // Method 1: modern clipboard API
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      showToast(text+' — '+Lx().copied);
+    }).catch(()=>fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text;
+  ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0,99999);
+  try{
+    document.execCommand('copy');
+    showToast(text+' — '+Lx().copied);
+  }catch(e){
+    showToast('Error al copiar');
+  }
+  document.body.removeChild(ta);
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1900);
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.code==='Enter')generate();
+});
+
+applyLangUI();
+generate();
+</script>
+</body>
+</html>
