@@ -734,7 +734,7 @@ function generate(){
   const elHex=document.getElementById('cHex');
   const elRgb=document.getElementById('cRgb');
   const elHsl=document.getElementById('cHsl');
-  elHex.textContent=hexVal;   elHex.onclick=()=>copyText(hexVal);
+  elHex.textContent=hexVal;   elHex.onclick=()=>copyText(hexVal.replace('#',''));
   elRgb.textContent=rgbVal;   elRgb.onclick=()=>copyText(rgbVal);
   elHsl.textContent=hslVal;   elHsl.onclick=()=>copyText(hslVal);
   document.getElementById('adaptPanel').style.display='flex';
@@ -754,7 +754,7 @@ function generate(){
     seg.className='scale-seg';
     seg.style.background=`rgb(${sr},${sg},${sb})`;
     seg.title=`L=${sl2}° H=${Math.round(sh2)}°`;
-    seg.onclick=()=>copyText(rgbToHex(sr,sg,sb));
+    seg.onclick=()=>copyText(rgbToHex(sr,sg,sb).replace('#',''));
     scaleBar.appendChild(seg);
   }
   document.getElementById('scaleWrap').style.display='block';
@@ -806,7 +806,7 @@ function generate(){
     swatchEl.appendChild(badge);
     swatchEl.addEventListener('click', function(e){
       e.stopPropagation();
-      copyText(copyHex);
+      copyText(copyHex.replace('#',''));
     });
     card.appendChild(swatchEl);
 
@@ -821,7 +821,7 @@ function generate(){
     hexEl.style.cursor='pointer';hexEl.textContent=copyHex;
     hexEl.addEventListener('click', function(e){
       e.stopPropagation();
-      copyText(copyHex);
+      copyText(copyHex.replace('#',''));
     });
 
     const rgbEl=document.createElement('div');rgbEl.className='tone-rgb';
