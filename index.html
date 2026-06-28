@@ -446,11 +446,10 @@ function getAdaptiveSaturation(h,s,l,context){
   return 1.0;
 }
 function getAdaptiveLuminosity(h,s,l,context){
-  const isLight=l>60;
-  if(context==='pure-white')return isLight?92:95;
-  if(context==='bright')return isLight?82:Math.min(l+30,86);
-  if(context==='light')return isLight?72:Math.min(l+18,78);
-  if(context==='midlight')return isLight?58:Math.min(l+8,60);
+  if(context==='pure-white')return 95;
+  if(context==='bright')return Math.min(l+32,88);
+  if(context==='light')return Math.min(l+20,80);
+  if(context==='midlight')return Math.min(l+10,72);
   if(context==='midshadow')return Math.max(l-12,25);
   if(context==='shadow')return Math.max(l-28,15);
   if(context==='deep-shadow')return Math.max(l-42,8);
