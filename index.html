@@ -1043,6 +1043,7 @@ function downloadPNG(){
 let sphereLight={x:0.4,y:-0.7,z:0.6};
 let sphereLightScreen={x:220,y:100};
 let sphereLightLocked=false;
+let sphereInteractionSetup=false;
 
 function renderSphere(palette,h,s,l){
   try{
@@ -1138,6 +1139,9 @@ function renderSphere(palette,h,s,l){
 }
 
 function setupSphereInteraction(){
+  if(sphereInteractionSetup)return;
+  sphereInteractionSetup=true;
+
   const canvas=document.getElementById('sphereCanvas');
   if(!canvas)return;
 
