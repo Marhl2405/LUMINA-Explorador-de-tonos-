@@ -249,7 +249,10 @@ input[type="color"]{width:48px;height:44px;border:1px solid var(--border);cursor
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-.footer{text-align:center;margin-top:60px;font-size:0.68rem;color:var(--dim);letter-spacing:2px;}
+.footer{text-align:center;margin-top:60px;font-size:0.68rem;color:var(--dim);letter-spacing:2px;display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;}
+.footer-link{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:4px;background:rgba(var(--col),0.15);border:1px solid rgba(var(--col),0.3);transition:all 0.2s;cursor:pointer;}
+.footer-link:hover{background:rgba(var(--col),0.3);border-color:rgb(var(--col));transform:translateY(-2px);}
+.footer-link svg{width:16px;height:16px;}
 </style>
 </head>
 <body>
@@ -328,7 +331,16 @@ input[type="color"]{width:48px;height:44px;border:1px solid var(--border);cursor
     <div class="history-grid" id="historyGrid"></div>
   </div>
 
-  <div class="footer">LUMINA · TONE EXPLORER</div>
+  <div class="footer">
+    <span>LUMINA · TONE EXPLORER</span>
+    <a href="https://www.instagram.com/lour.vbb/" target="_blank" rel="noopener noreferrer" class="footer-link" title="Sígueme en Instagram">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none"/>
+        <circle cx="12" cy="12" r="3.5" fill="none"/>
+        <circle cx="18" cy="6" r="1" fill="currentColor"/>
+      </svg>
+    </a>
+  </div>
 </div>
 
 <div class="toast" id="toast">COPIADO ✓</div>
