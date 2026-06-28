@@ -323,7 +323,15 @@ input[type="color"]{width:48px;height:44px;border:1px solid var(--border);cursor
 
   <div class="tones-wrap" id="tonesWrap">
     <div class="section-title" id="tonesTitle">Paleta de tonos generada</div>
-    <div class="tone-grid" id="toneGrid"></div>
+    <div style="display:flex;gap:40px;margin:30px 0;align-items:flex-start;flex-wrap:wrap;">
+      <div style="flex:1;min-width:250px;">
+        <canvas id="sphereCanvas" width="300" height="300" style="border:1px solid #222230;border-radius:8px;background:#1a1a1e;display:block;"></canvas>
+        <p style="color:#5a5470;font-size:0.75rem;text-align:center;margin-top:10px;letter-spacing:1px;">ESFERA 3D INTERACTIVA</p>
+      </div>
+      <div style="flex:2;min-width:300px;">
+        <div class="tone-grid" id="toneGrid"></div>
+      </div>
+    </div>
   </div>
 
   <div class="history-wrap" id="historyWrap" style="display:none">
@@ -837,6 +845,7 @@ function generate(){
   // Tone cards
   const palette=buildPalette(h,s,l);
   currentPaletteData={hex,h,s,l,r,g,b,palette};
+  renderSphere(palette,h,s,l);
   const grid=document.getElementById('toneGrid');
   grid.innerHTML='';
 
@@ -1027,6 +1036,58 @@ function downloadPNG(){
   document.body.appendChild(link);link.click();document.body.removeChild(link);
 
   showToast(Lx().pngDl);
+}
+
+// ══ 3D SPHERE RENDERER ══
+function renderSphere(palette,h,s,l){
+  const canvas=document.getElementById('sphereCanvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h_=canvas.height;
+  const cx=w/2,cy=h_/2,radius=90;
+
+  ctx.fillStyle='#1a1a1e';
+  ctx.fillRect(0,0,w,h_);
+
+  const lightDir={x:0.5,y:-0.8,z:0.4};
+  const norm=Math.sqrt(lightDir.x**2+lightDir.y**2+lightDir.z**2);
+  lightDir.x/=norm;lightDir.y/=norm;lightDir.z/=norm;
+
+  for(let py=0;py<h_;py++){
+    for(let px=0;px<w;px++){
+      const dx=px-cx,dy=py-cy;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>radius)continue;
+
+      const z=Math.sqrt(Math.max(0,radius*radius-dist*dist));
+      const nx=dx/radius,ny=dy/radius,nz=z/radius;
+      const lightIntensity=Math.max(0.2,nx*lightDir.x+ny*lightDir.y+nz*lightDir.z);
+
+      let toneIdx;
+      if(lightIntensity>0.8)toneIdx=0;
+      else if(lightIntensity>0.65)toneIdx=1;
+      else if(lightIntensity>0.50)toneIdx=2;
+      else if(lightIntensity>0.35)toneIdx=3;
+      else if(lightIntensity>0.20)toneIdx=5;
+      else if(lightIntensity>0.05)toneIdx=6;
+      else toneIdx=7;
+
+      const[r,g,b]=palette[toneIdx].rgb;
+      const brightness=lightIntensity*1.1;
+      const r_=Math.round(Math.min(255,r*brightness));
+      const g_=Math.round(Math.min(255,g*brightness));
+      const b_=Math.round(Math.min(255,b*brightness));
+
+      ctx.fillStyle=`rgb(${r_},${g_},${b_})`;
+      ctx.fillRect(px,py,1,1);
+    }
+  }
+
+  ctx.strokeStyle='rgba(120,80,220,0.3)';
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.arc(cx,cy,radius,0,Math.PI*2);
+  ctx.stroke();
 }
 
 // ══ UTILS ══
