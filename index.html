@@ -443,10 +443,10 @@ function getAdaptiveSaturation(h,s,l,context){
     if(context==='pure-white'||context==='bright')return 1.05;
     return 0.98;
   }
-  if(context==='pure-white')return 0.40;
-  if(context==='bright')return 0.62;
-  if(context==='light')return 0.82;
-  if(context==='midlight')return 0.85;
+  if(context==='pure-white')return 0.75;
+  if(context==='bright')return 0.85;
+  if(context==='light')return 0.90;
+  if(context==='midlight')return 0.92;
   if(context==='midshadow')return 0.95;
   if(context==='shadow')return 0.88;
   if(context==='deep-shadow')return 0.75;
