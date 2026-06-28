@@ -413,52 +413,63 @@ function classifyColor(h,s,l){
   return{hueType,temp,satClass,isWarm,isCool};
 }
 function getAdaptiveHueShift(h,s,l,context){
-  const{isWarm,temp}=classifyColor(h,s,l);
+  const{isWarm}=classifyColor(h,s,l);
   const comp=(h+180)%360;
-  if(context==='light'){
-    if(isWarm)return(h+45)%360;else return(h-45+360)%360;
-  }else if(context==='midshadow'){
-    if(isWarm)return(comp-30+360)%360;else return(comp+30)%360;
-  }else if(context==='shadow'){
-    if(isWarm)return(comp-50+360)%360;else return(comp+50)%360;
-  }else if(context==='deep-shadow'){
-    const offset=isWarm?-20:20;return(comp+offset+360)%360;
+  const lightH=isWarm?(h+30)%360:(h-30+360)%360;
+  const shadowH=isWarm?(comp-25+360)%360:(comp+25)%360;
+  const splitComp1=(comp-35+360)%360;
+  const splitComp2=(comp+35)%360;
+
+  switch(context){
+    case 'pure-white': return lightH;
+    case 'bright': return lightH;
+    case 'light': return lightH;
+    case 'midlight': return h;
+    case 'midshadow': return shadowH;
+    case 'shadow': return splitComp1;
+    case 'deep-shadow': return splitComp2;
+    case 'core-shadow': return (comp+45)%360;
+    default: return h;
   }
-  return h;
 }
-function getAdaptiveSaturation(targetL,s,context){
-  if(s<15)return 1.0;if(s<35)return 1.05;
-  if(context==='light'&&s>80)return 0.35;
-  if(context==='light')return 0.65;
-  if(context==='midlight')return 0.95;
-  if(context==='midshadow')return 1.25;
-  if(context==='shadow')return 1.40;
+function getAdaptiveSaturation(h,s,l,context){
+  if(s<15)return 1.0;
+  if(s<35){
+    if(context==='pure-white'||context==='bright'||context==='light')return 1.08;
+    if(context==='midshadow'||context==='shadow')return 1.15;
+    return 1.0;
+  }
+  if(context==='pure-white')return 0.42;
+  if(context==='bright')return 0.68;
+  if(context==='light')return 0.88;
+  if(context==='midlight')return 0.98;
+  if(context==='midshadow')return 1.28;
+  if(context==='shadow')return 1.45;
   if(context==='deep-shadow')return 1.50;
   if(context==='core-shadow')return 1.55;
   return 1.0;
 }
 function getAdaptiveLuminosity(h,s,l,context){
-  const{satClass}=classifyColor(h,s,l);
   const isLight=l>60;
-  if(context==='pure-white')return 95;
-  if(context==='bright')return isLight?85:Math.min(l+35,88);
-  if(context==='light')return isLight?75:Math.min(l+20,80);
-  if(context==='midlight')return isLight?68:Math.min(l+15,72);
-  if(context==='midshadow')return Math.max(l-18,20);
-  if(context==='shadow')return Math.max(l-35,12);
-  if(context==='deep-shadow')return Math.max(l-50,8);
-  if(context==='core-shadow')return Math.max(l-62,5);
+  if(context==='pure-white')return isLight?92:95;
+  if(context==='bright')return isLight?82:Math.min(l+30,86);
+  if(context==='light')return isLight?72:Math.min(l+18,78);
+  if(context==='midlight')return isLight?65:Math.min(l+10,68);
+  if(context==='midshadow')return Math.max(l-15,22);
+  if(context==='shadow')return Math.max(l-30,14);
+  if(context==='deep-shadow')return Math.max(l-45,8);
+  if(context==='core-shadow')return Math.max(l-55,5);
   return l;
 }
 function getHBlend(context,s){
-  const blendFactors={
-    'pure-white':0.05,'bright':0.15,'light':0.35,
-    'midlight':0.25,'midshadow':0.35,'shadow':0.50,
-    'deep-shadow':0.62,'core-shadow':0.75
+  const blendMap={
+    'pure-white':0.06,'bright':0.12,'light':0.28,
+    'midlight':0.18,'midshadow':0.32,'shadow':0.45,
+    'deep-shadow':0.58,'core-shadow':0.70
   };
-  let base=blendFactors[context]||0;
-  if(s<20)base*=0.4;else if(s<40)base*=0.7;
-  return base;
+  let base=blendMap[context]||0;
+  if(s<20)base*=0.5;else if(s<40)base*=0.8;
+  return Math.max(base,0.03);
 }
 function chromaTone(h,s,l,{hShift=0,sMult=1,lTarget,hBlend=0}){
   const nh=Math.round((lerpHue(h,hShift,hBlend)+360)%360);
