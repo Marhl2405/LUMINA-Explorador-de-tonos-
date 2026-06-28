@@ -1040,65 +1040,51 @@ function downloadPNG(){
 
 // ══ 3D SPHERE RENDERER ══
 function renderSphere(palette,h,s,l){
-  const canvas=document.getElementById('sphereCanvas');
-  if(!canvas||!palette)return;
-  const ctx=canvas.getContext('2d');
-  const w=canvas.width,canvasH=canvas.height;
-  const cx=w/2,cy=canvasH/2,radius=90;
+  try{
+    const canvas=document.getElementById('sphereCanvas');
+    if(!canvas)return;
+    const ctx=canvas.getContext('2d');
+    if(!ctx)return;
 
-  ctx.fillStyle='#1a1a1e';
-  ctx.fillRect(0,0,w,canvasH);
+    const w=300,ht=300,cx=150,cy=150,radius=85;
 
-  const lightDir={x:0.5,y:-0.8,z:0.4};
-  const norm=Math.sqrt(lightDir.x*lightDir.x+lightDir.y*lightDir.y+lightDir.z*lightDir.z);
-  lightDir.x/=norm;lightDir.y/=norm;lightDir.z/=norm;
+    ctx.fillStyle='#1a1a1e';
+    ctx.fillRect(0,0,w,ht);
 
-  const imageData=ctx.createImageData(w,canvasH);
-  const data=imageData.data;
+    const lx=0.6,ly=-0.7,lz=0.5;
+    const ln=Math.sqrt(lx*lx+ly*ly+lz*lz);
+    const ldx=lx/ln,ldy=ly/ln,ldz=lz/ln;
 
-  for(let py=0;py<canvasH;py++){
-    for(let px=0;px<w;px++){
-      const dx=px-cx,dy=py-cy;
-      const distSq=dx*dx+dy*dy;
-      const radiusSq=radius*radius;
+    for(let y=0;y<ht;y++){
+      for(let x=0;x<w;x++){
+        const dx=x-cx,dy=y-cy;
+        const d2=dx*dx+dy*dy;
 
-      let r=26,g=26,b=30;
-      if(distSq<=radiusSq){
-        const dist=Math.sqrt(distSq);
-        const z=Math.sqrt(radiusSq-distSq);
+        if(d2>radius*radius)continue;
+
+        const z=Math.sqrt(radius*radius-d2);
         const nx=dx/radius,ny=dy/radius,nz=z/radius;
-        const lightIntensity=Math.max(0.15,nx*lightDir.x+ny*lightDir.y+nz*lightDir.z);
+        const light=Math.max(0.1,nx*ldx+ny*ldy+nz*ldz);
 
-        let toneIdx=4;
-        if(lightIntensity>0.75)toneIdx=0;
-        else if(lightIntensity>0.60)toneIdx=1;
-        else if(lightIntensity>0.45)toneIdx=2;
-        else if(lightIntensity>0.30)toneIdx=3;
-        else if(lightIntensity>0.10)toneIdx=5;
-        else if(lightIntensity>-0.05)toneIdx=6;
-        else toneIdx=7;
+        let idx=Math.floor(light*8);
+        if(idx<0)idx=0;if(idx>8)idx=8;
 
-        if(palette[toneIdx]){
-          const[tr,tg,tb]=palette[toneIdx].rgb;
-          const brightness=Math.max(0.8,lightIntensity*1.2);
-          r=Math.round(Math.min(255,tr*brightness));
-          g=Math.round(Math.min(255,tg*brightness));
-          b=Math.round(Math.min(255,tb*brightness));
+        if(palette[idx]){
+          const[r,g,b]=palette[idx].rgb;
+          ctx.fillStyle=`rgb(${Math.round(r*light)},${Math.round(g*light)},${Math.round(b*light)})`;
+          ctx.fillRect(x,y,1,1);
         }
       }
-
-      const idx=(py*w+px)*4;
-      data[idx]=r;data[idx+1]=g;data[idx+2]=b;data[idx+3]=255;
     }
+
+    ctx.strokeStyle='rgba(120,80,220,0.4)';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(cx,cy,radius,0,6.28);
+    ctx.stroke();
+  }catch(e){
+    console.error('Error renderizando esfera:',e);
   }
-
-  ctx.putImageData(imageData,0,0);
-
-  ctx.strokeStyle='rgba(120,80,220,0.25)';
-  ctx.lineWidth=1.5;
-  ctx.beginPath();
-  ctx.arc(cx,cy,radius,0,Math.PI*2);
-  ctx.stroke();
 }
 
 // ══ UTILS ══
