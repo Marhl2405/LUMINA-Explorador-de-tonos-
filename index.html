@@ -136,6 +136,7 @@ header {
   outline:none;transition:border-color 0.2s;text-transform:uppercase;letter-spacing:1px;
 }
 .hex-group input:focus{border-color:rgb(var(--col));}
+.hex-group input.input-invalid,.hex-group input.input-invalid:focus{border-color:#ff5a5a;}
 .color-picker-wrap{align-self:center;}
 input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;background:none;padding:2px;}
 .input-row .btn-accent{margin-left:auto;}
@@ -166,6 +167,8 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
 .comp-badge-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,0.25);transition:background 0.4s;}
 .comp-hex{font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.5px;color:var(--text);cursor:pointer;border-bottom:1px dashed rgba(255,255,255,0.15);transition:color 0.15s,border-color 0.15s;}
 .comp-hex:hover{color:rgb(var(--col));border-color:rgb(var(--col));}
+.comp-explore-btn{font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:700;line-height:1;padding:3px 7px;margin-left:2px;border:1px solid rgba(var(--col),0.5);background:rgba(var(--col),0.15);color:rgb(var(--col));border-radius:5px;cursor:pointer;transition:background 0.15s,border-color 0.15s;}
+.comp-explore-btn:hover{background:rgba(var(--col),0.28);border-color:rgb(var(--col));}
 
 /* SECTION TITLE */
 .section-title{
@@ -214,6 +217,11 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
   font-size:0.56rem;font-family:'JetBrains Mono',monospace;
   letter-spacing:0.4px;opacity:0.65;line-height:1.3;text-align:right;
 }
+.swatch-wcag-badge{
+  position:absolute;bottom:6px;left:7px;
+  font-size:0.56rem;font-family:'JetBrains Mono',monospace;
+  letter-spacing:0.4px;opacity:0.8;line-height:1.3;font-weight:600;cursor:help;
+}
 .tone-info{background:var(--panel2);padding:7px 9px 9px;border-radius:0 0 9px 9px;}
 .tone-role{
   font-family:'Manrope',sans-serif;font-size:0.67rem;font-weight:700;
@@ -252,13 +260,22 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
 .tt-actions{list-style:none;display:flex;flex-direction:column;gap:4px;}
 .tt-actions li{font-size:0.7rem;color:#c0b8d8;line-height:1.4;display:flex;gap:6px;align-items:flex-start;}
 .tt-actions li::before{content:'→';color:rgb(var(--col));flex-shrink:0;transition:color 0.8s;}
+/* Flip tooltip below the card when there isn't room above (top row) */
+.tone-card.flip-down .tone-tooltip{bottom:auto;top:calc(100% + 10px);}
+.tone-card.flip-down .tone-tooltip::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:rgb(var(--col));}
 
 /* HISTORY */
 .history-wrap{margin-top:14px;}
 .history-toggle{cursor:pointer;user-select:none;justify-content:space-between;transition:color 0.15s;}
 .history-toggle:hover{color:var(--text);}
-.history-chevron{margin-left:auto;font-size:11px;line-height:1;transition:transform 0.25s ease;}
+.history-tools{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.history-clear-btn{font-family:'JetBrains Mono',monospace;font-size:0.66rem;line-height:1;padding:2px 6px;border:1px solid var(--border);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer;transition:color 0.15s,border-color 0.15s;}
+.history-clear-btn:hover{color:#ff5a5a;border-color:#ff5a5a;}
+.history-chevron{font-size:11px;line-height:1;transition:transform 0.25s ease;}
 .history-chevron.open{transform:rotate(180deg);}
+.history-actions{display:flex;align-items:center;gap:9px;}
+.history-del{cursor:pointer;color:var(--dim);font-size:0.72rem;line-height:1;transition:color 0.15s;}
+.history-del:hover{color:#ff5a5a;}
 .history-grid{display:none;flex-direction:column;gap:5px;max-height:220px;overflow:auto;margin-top:2px;}
 .history-grid.open{display:flex;}
 .history-item{
@@ -322,6 +339,7 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
         <button class="lang-btn" data-lang="fr"  onclick="setLang('fr')">FR</button>
         <button class="lang-btn" data-lang="de"  onclick="setLang('de')">DE</button>
       </div>
+      <button class="btn btn-outline" id="btnCss" onclick="copyCSSPalette()" style="display:none">⧉ CSS</button>
       <button class="btn btn-outline" id="btnPng" onclick="downloadPNG()" style="display:none">⬇ PNG</button>
     </div>
   </header>
@@ -348,7 +366,7 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
     </div>
     <div class="adapt-codes">
       <div class="adapt-hsl" id="adaptHsl">—</div>
-      <div class="comp-badge"><span class="comp-badge-dot" id="compBadgeDot"></span><span id="compLabel">Complementario</span><span class="comp-hex" id="compHex" title="Copiar"></span></div>
+      <div class="comp-badge"><span class="comp-badge-dot" id="compBadgeDot"></span><span id="compLabel">Complementario</span><span class="comp-hex" id="compHex" title="Copiar"></span><button class="comp-explore-btn" id="compExploreBtn">⇄</button></div>
       <div style="display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:2px">
         <div class="code-row"><span class="code-tag">HEX</span><span class="code-val" id="cHex" style="cursor:pointer">—</span></div>
         <div class="code-row"><span class="code-tag">RGB</span><span class="code-val" id="cRgb" style="cursor:pointer">—</span></div>
@@ -377,7 +395,10 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
         <div class="history-wrap" id="historyWrap" style="display:none">
           <div class="section-title history-toggle" id="historyToggle" onclick="toggleHistory()">
             <span id="historyTitle">Historial de paletas</span>
-            <span class="history-chevron" id="historyChevron">▾</span>
+            <span class="history-tools">
+              <button class="history-clear-btn" id="historyClearBtn" onclick="event.stopPropagation();clearHistory()">✕</button>
+              <span class="history-chevron" id="historyChevron">▾</span>
+            </span>
           </div>
           <div class="history-grid" id="historyGrid"></div>
         </div>
@@ -451,6 +472,23 @@ function lerpHue(h1,h2,t){
 
 function contrastColor(r,g,b){
   return(0.299*r+0.587*g+0.114*b)/255>0.5?'#0a0a0c':'#f0ecff';
+}
+
+// ── WCAG 2.1 contrast ──
+function relLuminance(r,g,b){
+  const a=[r,g,b].map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+  return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];
+}
+function contrastRatio(rgb1,rgb2){
+  const L1=relLuminance(rgb1[0],rgb1[1],rgb1[2]);
+  const L2=relLuminance(rgb2[0],rgb2[1],rgb2[2]);
+  return (Math.max(L1,L2)+0.05)/(Math.min(L1,L2)+0.05);
+}
+function wcagRating(ratio){
+  if(ratio>=7)  return'AAA';
+  if(ratio>=4.5)return'AA';
+  if(ratio>=3)  return'AA·L';   // AA for large text only
+  return'✕';
 }
 
 // ══ ADVANCED COLOR THEORY ENGINE ══
@@ -573,6 +611,7 @@ const I18N={
     historyTitle:'Historial de paletas',
     ttTitle:'Acciones sugeridas',
     copied:'COPIADO ✓',pngDl:'PNG DESCARGADO ✓',
+    exploreComp:'Explorar complementario',btnCss:'⧉ CSS',cssCopied:'CSS COPIADO ✓',clearHist:'Limpiar historial',delItem:'Eliminar',
     emptyHistory:'Las paletas generadas aparecerán aquí',
     roles:['Blanco tintado','Brillo máximo','Luz alta','Luz media','Color base','Sombra suave','Sombra media','Sombra profunda','Núcleo de sombra'],
     theories:[
@@ -610,6 +649,7 @@ const I18N={
     historyTitle:'Palette history',
     ttTitle:'Suggested uses',
     copied:'COPIED ✓',pngDl:'PNG DOWNLOADED ✓',
+    exploreComp:'Explore complementary',btnCss:'⧉ CSS',cssCopied:'CSS COPIED ✓',clearHist:'Clear history',delItem:'Delete',
     emptyHistory:'Generated palettes will appear here',
     roles:['Tinted white','Max highlight','High light','Mid light','Base color','Soft shadow','Mid shadow','Deep shadow','Core shadow'],
     theories:[
@@ -647,6 +687,7 @@ const I18N={
     historyTitle:'Histórico de paletas',
     ttTitle:'Usos sugeridos',
     copied:'COPIADO ✓',pngDl:'PNG BAIXADO ✓',
+    exploreComp:'Explorar complementar',btnCss:'⧉ CSS',cssCopied:'CSS COPIADO ✓',clearHist:'Limpar histórico',delItem:'Excluir',
     emptyHistory:'As paletas geradas aparecerão aqui',
     roles:['Branco tintado','Brilho máximo','Luz alta','Luz média','Cor base','Sombra suave','Sombra média','Sombra profunda','Núcleo de sombra'],
     theories:[
@@ -684,6 +725,7 @@ const I18N={
     historyTitle:'Historique des palettes',
     ttTitle:'Utilisations suggérées',
     copied:'COPIÉ ✓',pngDl:'PNG TÉLÉCHARGÉ ✓',
+    exploreComp:'Explorer la complémentaire',btnCss:'⧉ CSS',cssCopied:'CSS COPIÉ ✓',clearHist:'Effacer l\'historique',delItem:'Supprimer',
     emptyHistory:'Les palettes générées apparaîtront ici',
     roles:['Blanc teinté','Éclat maximum','Lumière haute','Lumière moyenne','Couleur base','Ombre douce','Ombre moyenne','Ombre profonde','Noyau d\'ombre'],
     theories:[
@@ -721,6 +763,7 @@ const I18N={
     historyTitle:'Palettenverlauf',
     ttTitle:'Vorgeschlagene Verwendungen',
     copied:'KOPIERT ✓',pngDl:'PNG HERUNTERGELADEN ✓',
+    exploreComp:'Komplementär erkunden',btnCss:'⧉ CSS',cssCopied:'CSS KOPIERT ✓',clearHist:'Verlauf löschen',delItem:'Löschen',
     emptyHistory:'Generierte Paletten erscheinen hier',
     roles:['Getöntes Weiß','Max Glanz','Hohes Licht','Mittleres Licht','Basisfarbe','Weicher Schatten','Mittlerer Schatten','Tiefer Schatten','Kernschatten'],
     theories:[
@@ -764,6 +807,7 @@ function applyLangUI(){
   document.getElementById('inputLabel').textContent=l.inputLabel;
   document.getElementById('btnGen').textContent=l.btnExplore;
   document.getElementById('btnPng').textContent=l.btnPng;
+  document.getElementById('btnCss').textContent=l.btnCss;
   document.getElementById('compLabel').textContent=l.compLabel;
   document.getElementById('scaleTitle').textContent=l.scaleTitle;
   document.getElementById('labelDark').textContent=l.labelDark;
@@ -772,10 +816,22 @@ function applyLangUI(){
   document.getElementById('tonesTitle').textContent=l.tonesTitle;
   document.getElementById('sphereTitle').textContent=l.sphereTitle;
   document.getElementById('historyTitle').textContent=l.historyTitle;
+  const clearBtn=document.getElementById('historyClearBtn');
+  if(clearBtn)clearBtn.title=l.clearHist;
 }
 
 // ══ SYNC INPUTS ══
 function syncFromRgb(){
+  // Clamp out-of-range values in the field itself so it never shows an
+  // impossible value (e.g. 300) while the color silently uses 255.
+  ['inR','inG','inB'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el.value==='')return;            // leave empty while the user retypes
+    const n=parseInt(el.value);
+    if(isNaN(n))return;
+    if(n>255)el.value=255;
+    else if(n<0)el.value=0;
+  });
   const r=clamp(parseInt(document.getElementById('inR').value)||0,0,255);
   const g=clamp(parseInt(document.getElementById('inG').value)||0,0,255);
   const b=clamp(parseInt(document.getElementById('inB').value)||0,0,255);
@@ -784,9 +840,13 @@ function syncFromRgb(){
   document.getElementById('colorPicker').value=hex;
 }
 function syncFromHex(){
-  const hex=document.getElementById('inHex').value;
+  const el=document.getElementById('inHex');
+  const hex=el.value;
   // Accept both 6-digit and 3-digit shorthand hex (#F00 → #FF0000)
-  if(!/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex))return;
+  const valid=/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex);
+  // Flag invalid, non-empty input with a red border so the user gets feedback
+  el.classList.toggle('input-invalid',hex!==''&&!valid);
+  if(!valid)return;
   const full=hex.startsWith('#')?hex:'#'+hex;
   const[r,g,b]=hexToRgb(full);
   document.getElementById('inR').value=r;
@@ -825,10 +885,40 @@ function saveHistory(hex,palette){
   // creating a duplicate row.
   const existing=history.findIndex(it=>it.hex===hex);
   if(existing!==-1)history.splice(existing,1);
-  history.unshift({hex,palette:[...palette]});
+  // Store only what the history rows need (hex + swatch colors) so it stays
+  // small and language-independent in localStorage.
+  history.unshift({hex,palette:palette.map(d=>({rgb:[d.rgb[0],d.rgb[1],d.rgb[2]]}))});
   if(history.length>16)history.pop();
+  persistHistory();
   renderHistory();
   document.getElementById('historyWrap').style.display='block';
+}
+
+function persistHistory(){
+  try{localStorage.setItem('lumina_history',JSON.stringify(history));}catch(e){}
+}
+
+function deleteHistory(i){
+  history.splice(i,1);
+  persistHistory();
+  renderHistory();
+}
+
+function clearHistory(){
+  history=[];
+  persistHistory();
+  renderHistory();
+}
+
+function loadHistoryFromStorage(){
+  try{
+    const raw=localStorage.getItem('lumina_history');
+    if(raw){const arr=JSON.parse(raw);if(Array.isArray(arr))history=arr;}
+  }catch(e){history=[];}
+  if(history.length){
+    renderHistory();
+    document.getElementById('historyWrap').style.display='block';
+  }
 }
 
 let historyOpen=false;
@@ -853,7 +943,10 @@ function renderHistory(){
       <div class="history-strip">${strips}</div>
       <div class="history-meta">
         <span class="history-hex">${item.hex}</span>
-        <span class="history-arrow" style="color:rgb(${br},${bg},${bb})">→</span>
+        <span class="history-actions">
+          <span class="history-del" title="${Lx().delItem}" onclick="event.stopPropagation();deleteHistory(${i})">✕</span>
+          <span class="history-arrow" style="color:rgb(${br},${bg},${bb})">→</span>
+        </span>
       </div>
     </div>`;
   }).join('');
@@ -882,6 +975,7 @@ function generate(){
 
   // Reflect the canonical color back into the inputs (e.g. #F00 → #FF0000)
   document.getElementById('inHex').value=hex;
+  document.getElementById('inHex').classList.remove('input-invalid');
   document.getElementById('colorPicker').value=hex;
 
   applyTheme(r,g,b,h,s,l);
@@ -900,6 +994,19 @@ function generate(){
   const elCompHex=document.getElementById('compHex');
   elCompHex.textContent=compHexVal;
   elCompHex.onclick=()=>copyText(compHexVal.replace('#',''));
+
+  // "Explore complementary" — load the complementary color as the new base
+  const btnComp=document.getElementById('compExploreBtn');
+  btnComp.title=Lx().exploreComp;
+  btnComp.onclick=()=>{
+    document.getElementById('inR').value=compR;
+    document.getElementById('inG').value=compG;
+    document.getElementById('inB').value=compB;
+    document.getElementById('inHex').value=compHexVal;
+    document.getElementById('inHex').classList.remove('input-invalid');
+    document.getElementById('colorPicker').value=compHexVal;
+    generate();
+  };
 
   const hexVal   = hex;
   const rgbVal   = `rgb(${r}, ${g}, ${b})`;
@@ -947,7 +1054,7 @@ function generate(){
     ? `hsl(${h},${Math.min(s,80)}%,65%)`   // lift to visible lightness
     : `rgb(${r},${g},${b})`;
 
-  palette.forEach(def=>{
+  palette.forEach((def,idx)=>{
     const[tr,tg,tb]=def.rgb;
     // Capture copies of the exact values for this iteration in const
     const copyHex = rgbToHex(tr,tg,tb);
@@ -972,6 +1079,10 @@ function generate(){
     tooltip.appendChild(ttTitle);tooltip.appendChild(ttTheory);tooltip.appendChild(ttList);
     card.appendChild(tooltip);
 
+    // The top row of the grid sits right under the input/panel controls, so
+    // its tooltips always open downward to avoid covering those controls.
+    if(idx<3)card.classList.add('flip-down');
+
     // ── swatch ──
     const swatchEl=document.createElement('div');
     swatchEl.className='tone-swatch';
@@ -981,6 +1092,16 @@ function generate(){
     badge.style.color=badgeTxt;
     badge.textContent=`H${Math.round(th)}° S${Math.round(ts)}% L${Math.round(tl)}%`;
     swatchEl.appendChild(badge);
+    // WCAG contrast badge — best legible text (dark/light) on this swatch
+    const cBlack=contrastRatio([tr,tg,tb],[10,10,12]);
+    const cWhite=contrastRatio([tr,tg,tb],[245,245,247]);
+    const bestRatio=Math.max(cBlack,cWhite);
+    const wcagBadge=document.createElement('div');
+    wcagBadge.className='swatch-wcag-badge';
+    wcagBadge.style.color=badgeTxt;
+    wcagBadge.textContent=`${wcagRating(bestRatio)} ${bestRatio.toFixed(1)}`;
+    wcagBadge.title=`WCAG ${bestRatio.toFixed(2)}:1 · ${cBlack>=cWhite?'texto oscuro':'texto claro'}`;
+    swatchEl.appendChild(wcagBadge);
     swatchEl.addEventListener('click', function(e){
       e.stopPropagation();
       copyText(copyHex.replace('#',''));
@@ -1022,6 +1143,7 @@ function generate(){
 
   document.getElementById('tonesWrap').style.display='block';
   document.getElementById('btnPng').style.display='';
+  document.getElementById('btnCss').style.display='';
   saveHistory(hex,palette);
   setTimeout(()=>document.getElementById('adaptPanel').scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
@@ -1196,18 +1318,17 @@ function setupSphereInteraction(){
 }
 
 // ══ UTILS ══
-function copyText(text){
+function copyText(text,toastMsg){
+  const done=()=>showToast(toastMsg||(text+' — '+Lx().copied));
   // Method 1: modern clipboard API
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(()=>{
-      showToast(text+' — '+Lx().copied);
-    }).catch(()=>fallbackCopy(text));
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,toastMsg));
   } else {
-    fallbackCopy(text);
+    fallbackCopy(text,toastMsg);
   }
 }
 
-function fallbackCopy(text){
+function fallbackCopy(text,toastMsg){
   const ta=document.createElement('textarea');
   ta.value=text;
   ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0;';
@@ -1217,11 +1338,22 @@ function fallbackCopy(text){
   ta.setSelectionRange(0,99999);
   try{
     document.execCommand('copy');
-    showToast(text+' — '+Lx().copied);
+    showToast(toastMsg||(text+' — '+Lx().copied));
   }catch(e){
     showToast('Error al copiar');
   }
   document.body.removeChild(ta);
+}
+
+// ══ EXPORT CSS PALETTE ══
+function copyCSSPalette(){
+  if(!currentPaletteData)return;
+  const lines=currentPaletteData.palette.map(def=>{
+    const[r,g,b]=def.rgb;
+    return `  --lumina-${def.id}: ${rgbToHex(r,g,b)};`;
+  });
+  const css=`:root {\n${lines.join('\n')}\n}`;
+  copyText(css,Lx().cssCopied);
 }
 
 function showToast(msg){
@@ -1231,8 +1363,11 @@ function showToast(msg){
 }
 
 document.addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT')return;
-  if(e.code==='Enter')generate();
+  // Enter anywhere — including the RGB/HEX inputs — triggers exploration
+  if(e.code==='Enter'){
+    if(e.target&&e.target.tagName==='INPUT')e.target.blur();
+    generate();
+  }
 });
 
 // Restore the previously selected language (persisted across sessions)
@@ -1245,6 +1380,7 @@ document.addEventListener('keydown',e=>{
   }
 })();
 applyLangUI();
+loadHistoryFromStorage();
 generate();
 </script>
 </body>
