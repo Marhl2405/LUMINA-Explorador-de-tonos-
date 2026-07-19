@@ -101,8 +101,9 @@ header {
   background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.15s;
 }
 .lang-btn:first-child{border-left:none;}
-.lang-btn.active{background:rgba(255,255,255,0.14);color:#ffffff;}
+.lang-btn.active{background:rgb(var(--col));color:#0a0a0c;font-weight:700;transition:background 0.8s,color 0.8s;}
 .lang-btn:hover{color:#ffffff;}
+.lang-btn.active:hover{color:#0a0a0c;}
 
 /* INPUT */
 .input-section {
@@ -162,6 +163,9 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
 .adapt-hsl{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:rgba(255,255,255,0.55);letter-spacing:0.3px;}
 .comp-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.65rem;letter-spacing:1.5px;color:var(--dim);}
 .comp-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid #0a0a0d;flex-shrink:0;transition:background 0.8s;}
+.comp-badge-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,0.25);transition:background 0.4s;}
+.comp-hex{font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.5px;color:var(--text);cursor:pointer;border-bottom:1px dashed rgba(255,255,255,0.15);transition:color 0.15s,border-color 0.15s;}
+.comp-hex:hover{color:rgb(var(--col));border-color:rgb(var(--col));}
 
 /* SECTION TITLE */
 .section-title{
@@ -218,6 +222,8 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
 }
 .tone-hex{font-family:'JetBrains Mono',monospace;font-size:0.83rem;color:#f5f5f7;margin-bottom:2px;}
 .tone-rgb{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:#7a7090;}
+.tone-hsl{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:#7a7090;margin-top:1px;}
+.tone-hex:hover,.tone-rgb:hover,.tone-hsl:hover{color:rgb(var(--col));}
 
 /* TOOLTIP */
 .tone-tooltip{
@@ -342,7 +348,7 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
     </div>
     <div class="adapt-codes">
       <div class="adapt-hsl" id="adaptHsl">—</div>
-      <div class="comp-badge"><span id="compLabel">Complementario</span></div>
+      <div class="comp-badge"><span class="comp-badge-dot" id="compBadgeDot"></span><span id="compLabel">Complementario</span><span class="comp-hex" id="compHex" title="Copiar"></span></div>
       <div style="display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:2px">
         <div class="code-row"><span class="code-tag">HEX</span><span class="code-val" id="cHex" style="cursor:pointer">—</span></div>
         <div class="code-row"><span class="code-tag">RGB</span><span class="code-val" id="cRgb" style="cursor:pointer">—</span></div>
@@ -746,6 +752,7 @@ function Lx(){return I18N[currentLang]||I18N.es;}
 
 function setLang(lang){
   currentLang=lang;
+  try{localStorage.setItem('lumina_lang',lang);}catch(e){}
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
   applyLangUI();
   if(currentHex)generate();
@@ -778,7 +785,8 @@ function syncFromRgb(){
 }
 function syncFromHex(){
   const hex=document.getElementById('inHex').value;
-  if(!/^#?[0-9a-fA-F]{6}$/.test(hex))return;
+  // Accept both 6-digit and 3-digit shorthand hex (#F00 → #FF0000)
+  if(!/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex))return;
   const full=hex.startsWith('#')?hex:'#'+hex;
   const[r,g,b]=hexToRgb(full);
   document.getElementById('inR').value=r;
@@ -812,8 +820,11 @@ let currentHex=null;
 let currentPaletteData=null;
 
 function saveHistory(hex,palette){
-  // Avoid exact duplicates
-  if(history.length&&history[0].hex===hex)return;
+  // Deduplicate: if this color is already in the history (even restored from
+  // an older entry), remove it first so it moves to the front instead of
+  // creating a duplicate row.
+  const existing=history.findIndex(it=>it.hex===hex);
+  if(existing!==-1)history.splice(existing,1);
   history.unshift({hex,palette:[...palette]});
   if(history.length>16)history.pop();
   renderHistory();
@@ -869,6 +880,10 @@ function generate(){
   const comp=(h+180)%360;
   currentHex=hex;
 
+  // Reflect the canonical color back into the inputs (e.g. #F00 → #FF0000)
+  document.getElementById('inHex').value=hex;
+  document.getElementById('colorPicker').value=hex;
+
   applyTheme(r,g,b,h,s,l);
 
   // Base panel
@@ -876,6 +891,15 @@ function generate(){
   swatch.style.background=hex;
   swatch.style.boxShadow=`0 0 60px rgba(${r},${g},${b},0.4),0 0 120px rgba(${r},${g},${b},0.12)`;
   document.getElementById('adaptHsl').textContent=`hsl(${h}°, ${s}%, ${l}%) · ${Lx().compLabel}: ${Math.round(comp)}°`;
+
+  // Complementary chip: give the "Complementary" label its own color swatch + hex
+  // so it's clearly a distinct color from the base swatch.
+  const[compR,compG,compB]=hslToRgb(comp,s,l);
+  const compHexVal=rgbToHex(compR,compG,compB);
+  document.getElementById('compBadgeDot').style.background=`rgb(${compR},${compG},${compB})`;
+  const elCompHex=document.getElementById('compHex');
+  elCompHex.textContent=compHexVal;
+  elCompHex.onclick=()=>copyText(compHexVal.replace('#',''));
 
   const hexVal   = hex;
   const rgbVal   = `rgb(${r}, ${g}, ${b})`;
@@ -929,6 +953,7 @@ function generate(){
     const copyHex = rgbToHex(tr,tg,tb);
     const copyRgb = `rgb(${tr}, ${tg}, ${tb})`;
     const[th,ts,tl]=rgbToHsl(tr,tg,tb);
+    const copyHsl = `hsl(${Math.round(th)}, ${Math.round(ts)}%, ${Math.round(tl)}%)`;
     const badgeTxt=contrastColor(tr,tg,tb);
     const isBase=def.id==='base';
 
@@ -983,7 +1008,14 @@ function generate(){
       copyText(copyRgb);
     });
 
-    infoEl.appendChild(roleEl);infoEl.appendChild(hexEl);infoEl.appendChild(rgbEl);
+    const hslEl=document.createElement('div');hslEl.className='tone-hsl';
+    hslEl.style.cursor='pointer';hslEl.textContent=copyHsl;
+    hslEl.addEventListener('click', function(e){
+      e.stopPropagation();
+      copyText(copyHsl);
+    });
+
+    infoEl.appendChild(roleEl);infoEl.appendChild(hexEl);infoEl.appendChild(rgbEl);infoEl.appendChild(hslEl);
     card.appendChild(infoEl);
     grid.appendChild(card);
   });
@@ -1203,6 +1235,15 @@ document.addEventListener('keydown',e=>{
   if(e.code==='Enter')generate();
 });
 
+// Restore the previously selected language (persisted across sessions)
+(function restoreLang(){
+  let saved=null;
+  try{saved=localStorage.getItem('lumina_lang');}catch(e){}
+  if(saved&&I18N[saved]){
+    currentLang=saved;
+    document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===saved));
+  }
+})();
 applyLangUI();
 generate();
 </script>
