@@ -360,24 +360,60 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
   .sidebar-col{width:100%;}
   .palette-col{width:100%;min-width:0;}
   .sphere-box{width:100%;max-width:300px;margin:0 auto;}
+  header{gap:10px;}
+  .hdr-btns{width:100%;justify-content:flex-start;}
 }
 @media (max-width:640px){
   .tone-grid{grid-template-columns:repeat(2,1fr);}
+  .adaptive-panel{flex-wrap:wrap;}
 }
 @media (max-width:520px){
   .wrap{padding:16px 12px 26px;}
   .input-row{gap:10px;}
   .rgb-group{flex:1;min-width:60px;}
-  .rgb-group input[type="number"]{width:100%;}
+  .rgb-group input[type="number"]{width:100%;padding:10px 8px;font-size:16px;}
   .hex-group{flex:1 1 120px;}
-  .hex-group input{width:100%;}
+  .hex-group input{width:100%;padding:10px 8px;font-size:16px;}
   .input-row .btn-accent{margin-left:0;flex:1 1 100%;}
   .logo-block h1{font-size:19px;}
   .logo-sub{font-size:9px;letter-spacing:1.5px;}
+
+  /* Touch targets: keep every tappable control comfortably above ~40px */
+  .btn{padding:10px 14px;font-size:12px;}
+  .lang-btn{padding:10px 11px;}
+  .mode-item{padding:11px 10px;}
+  input[type="color"]{width:44px;height:44px;}
+  .swatch-wcag-badge,.swatch-hsl-badge{font-size:0.6rem;}
+
+  /* Header controls stack full-width so nothing gets cramped or clipped */
+  .hdr-btns{gap:8px;}
+  .mode-dropdown{flex:1 1 auto;}
+  .mode-btn{width:100%;justify-content:space-between;}
+  .mode-menu{left:0;right:0;min-width:0;width:100%;}
+  .lang-group{flex:1 1 auto;}
+  .lang-btn{flex:1;}
+
+  /* Adaptive result panel: swatch on top, codes stacked below, full width */
+  .adaptive-panel{flex-direction:column;align-items:stretch;padding:14px;}
+  .adapt-swatch{width:100%;height:56px;}
+  .adapt-codes{width:100%;}
+  .code-row{flex-wrap:wrap;}
+
+  .skin-catalog-grid{grid-template-columns:repeat(auto-fill,minmax(48px,1fr));}
 }
 @media (max-width:440px){
   .tone-grid{grid-template-columns:1fr;}
   .code-row{gap:6px;}
+  .footer{font-size:0.6rem;gap:8px;}
+}
+
+/* Devices without hover (touch): give tappable elements visible affordance
+   and avoid relying on :hover-only states, since those never fire on touch. */
+@media (hover:none){
+  .tone-card{cursor:pointer;}
+  .skin-swatch:hover,.tone-card:hover,.history-item:hover{transform:none;}
+  .tone-card:active{transform:translateY(-2px);border-color:rgba(var(--col),0.5);}
+  .sphere-box{touch-action:none;}
 }
 </style>
 </head>
@@ -426,7 +462,6 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
         <button class="lang-btn" data-lang="fr"  onclick="setLang('fr')">FR</button>
         <button class="lang-btn" data-lang="de"  onclick="setLang('de')">DE</button>
       </div>
-      <button class="btn btn-outline" id="btnCss" onclick="copyCSSPalette()" style="display:none">⧉ CSS</button>
       <button class="btn btn-outline" id="btnPng" onclick="downloadPNG()" style="display:none">⬇ PNG</button>
     </div>
   </header>
@@ -1053,7 +1088,6 @@ function applyLangUI(){
   document.getElementById('inputLabel').textContent=l.inputLabel;
   document.getElementById('btnGen').textContent=l.btnExplore;
   document.getElementById('btnPng').textContent=l.btnPng;
-  document.getElementById('btnCss').textContent=l.btnCss;
   document.getElementById('compLabel').textContent=l.compLabel;
   document.getElementById('scaleTitle').textContent=l.scaleTitle;
   document.getElementById('labelDark').textContent=l.labelDark;
@@ -1180,6 +1214,22 @@ function showSharedTooltip(card){
 function hideSharedTooltip(){
   document.getElementById('sharedTooltip').classList.remove('tt-show');
 }
+
+// Detects touch/no-hover devices so tone-card tooltips switch from
+// hover-based (desktop) to tap-to-toggle (mobile), since mouseenter/
+// mouseleave never fire on touchscreens.
+function isTouchDevice(){
+  return window.matchMedia('(hover: none)').matches || 'ontouchstart' in window;
+}
+let openTooltipCard=null;
+
+document.addEventListener('click',(e)=>{
+  if(!openTooltipCard)return;
+  if(!openTooltipCard.contains(e.target)){
+    hideSharedTooltip();
+    openTooltipCard=null;
+  }
+});
 
 // ══ HISTORY ══
 let history=[];
@@ -1383,8 +1433,25 @@ function generate(){
     // position:fixed viewport-relative positioning.
     card.dataset.ttTheory=def.theory;
     card._ttActions=def.actions;
-    card.addEventListener('mouseenter',()=>showSharedTooltip(card));
-    card.addEventListener('mouseleave',hideSharedTooltip);
+    if(isTouchDevice()){
+      // No hover on touch: tapping the card toggles the tooltip instead.
+      // The swatch/hex/rgb/hsl click handlers call stopPropagation, so taps
+      // that land on those (which copy a value) won't also toggle the tooltip.
+      card.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        const isOpen=document.getElementById('sharedTooltip').classList.contains('tt-show') && openTooltipCard===card;
+        if(isOpen){
+          hideSharedTooltip();
+          openTooltipCard=null;
+        }else{
+          showSharedTooltip(card);
+          openTooltipCard=card;
+        }
+      });
+    }else{
+      card.addEventListener('mouseenter',()=>showSharedTooltip(card));
+      card.addEventListener('mouseleave',hideSharedTooltip);
+    }
 
     // ── swatch ──
     const swatchEl=document.createElement('div');
@@ -1446,7 +1513,6 @@ function generate(){
 
   document.getElementById('tonesWrap').style.display='block';
   document.getElementById('btnPng').style.display='';
-  document.getElementById('btnCss').style.display='';
   saveHistory(hex,palette);
   setTimeout(()=>document.getElementById('adaptPanel').scrollIntoView({behavior:'smooth',block:'start'}),80);
 }
@@ -1625,6 +1691,29 @@ function setupSphereInteraction(){
     box.style.cursor=sphereLocked?'pointer':'move';
   });
 
+  // Touch: dragging a finger across the sphere moves the light, same as
+  // mouse hover on desktop. touchmove doesn't fire mousemove, so this is
+  // handled separately; preventDefault stops the page from scrolling while
+  // dragging inside the sphere.
+  function moveFromTouch(touch){
+    const rect=box.getBoundingClientRect();
+    sphereHoverX=((touch.clientX-rect.left)/rect.width-0.5)*55;
+    sphereHoverY=((touch.clientY-rect.top)/rect.height-0.5)*55;
+    if(currentPaletteData){
+      renderSphere(currentPaletteData.palette);
+    }
+  }
+  box.addEventListener('touchstart',(e)=>{
+    if(e.touches.length!==1)return;
+    e.preventDefault();
+    moveFromTouch(e.touches[0]);
+  },{passive:false});
+  box.addEventListener('touchmove',(e)=>{
+    if(e.touches.length!==1)return;
+    e.preventDefault();
+    moveFromTouch(e.touches[0]);
+  },{passive:false});
+
   box.style.cursor='move';
   box.title='Clic para fijar / mover la luz';
 }
@@ -1675,8 +1764,9 @@ function showToast(msg){
 }
 
 document.addEventListener('keydown',e=>{
-  // Enter anywhere — including the RGB/HEX inputs — triggers exploration
-  if(e.code==='Enter'){
+  // Enter anywhere on the page — including while typing in the RGB/HEX
+  // inputs, or the numpad Enter key — triggers palette generation.
+  if(e.code==='Enter'||e.code==='NumpadEnter'||e.key==='Enter'){
     if(e.target&&e.target.tagName==='INPUT')e.target.blur();
     generate();
   }
@@ -1692,17 +1782,10 @@ document.addEventListener('keydown',e=>{
   }
 })();
 
-// Restore the previously selected shadow mode (persisted across sessions)
-(function restoreShadowMode(){
-  let saved=null;
-  try{saved=localStorage.getItem('lumina_shadow_mode');}catch(e){}
-  if(saved&&SHADOW_MODE_HUES[saved]||saved==='default'){
-    if(saved==='default'||SHADOW_MODE_HUES[saved]){
-      shadowMode=saved;
-      document.querySelectorAll('.mode-item').forEach(b=>b.classList.toggle('active',b.dataset.mode===saved));
-    }
-  }
-})();
+// Shadow mode always starts on "Sombras" (default) when the page opens,
+// regardless of what was last selected — it's still saved to localStorage
+// on each change (setShadowMode), but that saved value is intentionally
+// not read back here.
 applyLangUI();
 updateInputModeUI();
 loadHistoryFromStorage();
