@@ -105,6 +105,53 @@ header {
 .lang-btn:hover{color:#ffffff;}
 .lang-btn.active:hover{color:#0a0a0c;}
 
+/* SHADOW MODE DROPDOWN */
+.mode-dropdown{position:relative;}
+.mode-btn{display:flex;align-items:center;gap:8px;}
+.mode-caret{font-size:9px;transition:transform 0.2s;opacity:0.8;}
+.mode-dropdown.open .mode-caret{transform:rotate(180deg);}
+.mode-menu{
+  position:absolute;top:calc(100% + 8px);right:0;min-width:200px;z-index:40;
+  background:#0e0e12;border:1px solid rgba(255,255,255,0.12);border-radius:10px;
+  padding:6px;box-shadow:0 12px 32px rgba(0,0,0,0.45);
+  opacity:0;visibility:hidden;transform:translateY(-6px);
+  transition:opacity 0.15s,transform 0.15s,visibility 0.15s;
+}
+.mode-dropdown.open .mode-menu{opacity:1;visibility:visible;transform:translateY(0);}
+.mode-menu-title{
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--dim);padding:6px 10px 8px;
+}
+.mode-item{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:0.3px;
+  padding:9px 10px;border:none;border-radius:7px;background:transparent;color:rgba(255,255,255,0.65);
+  cursor:pointer;transition:background 0.15s,color 0.15s;
+}
+.mode-item:hover{background:rgba(255,255,255,0.06);color:#ffffff;}
+.mode-item .mode-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,0.25);}
+.mode-item.active{background:rgba(var(--col),0.16);color:rgb(var(--col));transition:background 0.8s,color 0.8s;}
+.mode-item.active .mode-dot{box-shadow:0 0 0 2px rgba(var(--col),0.25);}
+
+/* SKIN CATALOG */
+.skin-catalog{margin-top:16px;}
+.skin-catalog-title{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:10px;
+}
+.skin-note{
+  font-family:'Manrope',sans-serif;font-size:11.5px;line-height:1.5;color:rgba(255,255,255,0.5);
+  margin-bottom:14px;max-width:560px;
+}
+.skin-catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:10px;}
+.skin-swatch{
+  cursor:pointer;border-radius:10px;border:1px solid var(--border);background:var(--panel2);
+  overflow:hidden;transition:border-color 0.2s,transform 0.2s;
+}
+.skin-swatch:hover{transform:translateY(-3px);border-color:rgba(var(--col),0.5);}
+.skin-swatch.active{border-color:rgb(var(--col));box-shadow:0 0 0 1px rgb(var(--col));}
+.skin-swatch-color{height:60px;}
+
 /* INPUT */
 .input-section {
   background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;
@@ -235,19 +282,18 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
 
 /* TOOLTIP */
 .tone-tooltip{
-  display:none;position:absolute;
-  bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
-  width:256px;background:#13111e;border:1px solid rgb(var(--col));border-radius:10px;
+  position:fixed;top:0;left:0;
+  width:256px;max-width:calc(100vw - 24px);background:#13111e;border:1px solid rgb(var(--col));border-radius:10px;
   padding:14px 15px;z-index:300;
   box-shadow:0 8px 32px rgba(0,0,0,0.7),0 0 24px rgba(var(--col),0.15);
-  pointer-events:none;transition:border-color 0.8s;
+  pointer-events:none;opacity:0;visibility:hidden;
+  transition:border-color 0.8s,opacity 0.16s ease,transform 0.16s ease;
+  transform:translateY(6px);
 }
-.tone-card:hover .tone-tooltip{display:block;animation:popUp 0.16s ease;}
-@keyframes popUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.tone-tooltip::after{
-  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
-  border:7px solid transparent;border-top-color:rgb(var(--col));transition:border-top-color 0.8s;
-}
+.tone-tooltip.tt-show{opacity:1;visibility:visible;transform:translateY(0);}
+.tone-tooltip-arrow{position:absolute;width:0;height:0;left:50%;margin-left:-7px;border:7px solid transparent;}
+.tone-tooltip-arrow.arrow-down{top:100%;border-top-color:rgb(var(--col));transition:border-top-color 0.8s;}
+.tone-tooltip-arrow.arrow-up{bottom:100%;border-bottom-color:rgb(var(--col));transition:border-bottom-color 0.8s;}
 .tt-theory{
   font-size:0.66rem;color:#9888c0;line-height:1.45;
   margin-bottom:9px;padding-bottom:8px;border-bottom:1px solid var(--border);font-style:italic;
@@ -260,9 +306,6 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
 .tt-actions{list-style:none;display:flex;flex-direction:column;gap:4px;}
 .tt-actions li{font-size:0.7rem;color:#c0b8d8;line-height:1.4;display:flex;gap:6px;align-items:flex-start;}
 .tt-actions li::before{content:'→';color:rgb(var(--col));flex-shrink:0;transition:color 0.8s;}
-/* Flip tooltip below the card when there isn't room above (top row) */
-.tone-card.flip-down .tone-tooltip{bottom:auto;top:calc(100% + 10px);}
-.tone-card.flip-down .tone-tooltip::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:rgb(var(--col));}
 
 /* HISTORY */
 .history-wrap{margin-top:14px;}
@@ -306,9 +349,6 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
 .footer-link{display:inline-flex;align-items:center;justify-content:center;color:var(--dim);transition:all 0.2s;cursor:pointer;text-decoration:none;}
 .footer-link:hover{color:rgb(var(--col));}
 .footer-link svg{width:22px;height:22px;stroke-width:2;}
-
-/* Keep the tooltip from overflowing narrow viewports */
-.tone-tooltip{max-width:calc(100vw - 24px);}
 
 /* ── Responsive ── */
 @media (max-width:820px){
@@ -359,6 +399,26 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
       <span class="logo-sub" id="logoSub">// Explorador de tonos · luces · sombras</span>
     </div>
     <div class="hdr-btns">
+      <div class="mode-dropdown" id="modeDropdown">
+        <button class="btn btn-outline mode-btn" id="modeBtn" onclick="toggleModeMenu(event)">
+          <span id="modeBtnLabel">◆ Sombras</span><span class="mode-caret">▾</span>
+        </button>
+        <div class="mode-menu" id="modeMenu">
+          <div class="mode-menu-title" id="modeMenuTitle">Modo</div>
+          <button class="mode-item active" data-mode="default" onclick="setShadowMode('default')">
+            <span class="mode-dot" style="background:#9aa0ff"></span><span id="modeItemDefault">Sombras</span>
+          </button>
+          <button class="mode-item" data-mode="cool" onclick="setShadowMode('cool')">
+            <span class="mode-dot" style="background:#4fa8ff"></span><span id="modeItemCool">Sombras frías</span>
+          </button>
+          <button class="mode-item" data-mode="warm" onclick="setShadowMode('warm')">
+            <span class="mode-dot" style="background:#ff9a4f"></span><span id="modeItemWarm">Sombras cálidas</span>
+          </button>
+          <button class="mode-item" data-mode="skin" onclick="setShadowMode('skin')">
+            <span class="mode-dot" style="background:#e0a084"></span><span id="modeItemSkin">Piel</span>
+          </button>
+        </div>
+      </div>
       <div class="lang-group">
         <button class="lang-btn active" data-lang="es" onclick="setLang('es')">ES</button>
         <button class="lang-btn" data-lang="en"  onclick="setLang('en')">EN</button>
@@ -373,7 +433,7 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
 
   <div class="input-section">
     <div class="input-label" id="inputLabel">// Ingresa tu color base</div>
-    <div class="input-row">
+    <div class="input-row" id="inputRow">
       <div class="rgb-group"><label>R</label><input type="number" id="inR" min="0" max="255" value="120" oninput="syncFromRgb()"></div>
       <span class="sep">·</span>
       <div class="rgb-group"><label>G</label><input type="number" id="inG" min="0" max="255" value="80"  oninput="syncFromRgb()"></div>
@@ -382,6 +442,11 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
       <div class="hex-group"><label>HEX</label><input type="text" id="inHex" value="#7850DC" maxlength="7" oninput="syncFromHex()"></div>
       <div class="color-picker-wrap"><input type="color" id="colorPicker" value="#7850DC" oninput="syncFromPicker()"></div>
       <button class="btn btn-accent" id="btnGen" onclick="generate()">▶ Explorar</button>
+    </div>
+    <div class="skin-catalog" id="skinCatalog" style="display:none">
+      <div class="skin-catalog-title" id="skinCatalogTitle">// Elige un tono de piel</div>
+      <div class="skin-note" id="skinNote">Ten en cuenta que esta sección solo incluye algunos ejemplos de tonos de piel como referencia. Sabemos que existe una gran diversidad, por lo que, si no encuentras el tono que necesitas, siéntete con total libertad de agregarlo tú mismo en el apartado superior.</div>
+      <div class="skin-catalog-grid" id="skinCatalogGrid"></div>
     </div>
   </div>
 
@@ -454,6 +519,13 @@ input[type="color"]{width:40px;height:40px;border:1px solid rgba(255,255,255,0.2
 
 <div class="toast" id="toast">COPIADO ✓</div>
 
+<div class="tone-tooltip" id="sharedTooltip">
+  <div class="tt-title" id="sharedTtTitle"></div>
+  <div class="tt-theory" id="sharedTtTheory"></div>
+  <ul class="tt-actions" id="sharedTtActions"></ul>
+  <div class="tone-tooltip-arrow" id="sharedTtArrow"></div>
+</div>
+
 <script>
 // ══ COLOR MATH ══
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
@@ -525,11 +597,49 @@ function wcagRating(ratio){
 function isWarmHue(h){
   return h<90||h>=270;
 }
+// ══ SKIN TONE CATALOG ══
+// A curated, fixed set of base colors for the "Piel" mode so the user
+// doesn't have to hunt for a valid skin hex manually — pick a swatch and
+// the adaptive skin shadow logic (SHADOW_MODE_HUES.skin) takes over.
+const SKIN_HEXES=['#F4DCC9','#F2D0AE','#E8B892','#D9A574','#C68B5C','#B8794C','#A66B44','#8B5334','#6B3D26','#4A2A1C'];
+const SKIN_TONE_NAMES={
+  es:['Muy clara fría','Muy clara cálida','Clara','Clara media','Media','Media dorada','Media oscura','Oscura','Muy oscura','Profunda'],
+  en:['Very light cool','Very light warm','Light','Light-medium','Medium','Medium golden','Medium-dark','Dark','Very dark','Deep'],
+  pt:['Muito clara fria','Muito clara quente','Clara','Clara média','Média','Média dourada','Média escura','Escura','Muito escura','Profunda'],
+  fr:['Très claire froide','Très claire chaude','Claire','Claire moyenne','Moyenne','Moyenne dorée','Moyenne foncée','Foncée','Très foncée','Profonde'],
+  de:['Sehr hell kühl','Sehr hell warm','Hell','Hell-mittel','Mittel','Mittel golden','Mittel-dunkel','Dunkel','Sehr dunkel','Tief']
+};
+
+
+// ══ SHADOW MODE ══
+// Lets the user force the hue behavior of the shadow zones (midshadow,
+// shadow, deep-shadow, core-shadow) independently of the base color's own
+// warm/cool bias. 'default' keeps the original adaptive complementary
+// logic; the others pin the shadow hues to a fixed chromatic family that
+// matches a specific rendering convention.
+let shadowMode='default';
+const SHADOW_MODE_HUES={
+  // Cool shadows: classic blue/violet shadow convention (common in painting
+  // and 3D lighting when the light source itself reads warm).
+  cool:{midshadow:215,shadow:230,'deep-shadow':245,'core-shadow':255},
+  // Warm shadows: umber/red-brown shadow convention (common when the
+  // ambient bounce light is warm, e.g. indoor tungsten scenes).
+  warm:{midshadow:20,shadow:15,'deep-shadow':25,'core-shadow':10},
+  // Skin: approximates subsurface-scattering shadow theory used in
+  // portraiture — warm red halftone, shifting through red-violet, then
+  // settling into a cool blue-violet core shadow.
+  skin:{midshadow:12,shadow:345,'deep-shadow':270,'core-shadow':250}
+};
 function getAdaptiveHueShift(h,s,l,context){
   const isWarm=isWarmHue(h);
   const comp=(h+180)%360;
   const lightH=isWarm?(h+25)%360:(h-25+360)%360;
   const shadowH=isWarm?(comp+15)%360:(comp-15+360)%360;
+
+  if(shadowMode!=='default'){
+    const modeMap=SHADOW_MODE_HUES[shadowMode];
+    if(modeMap&&modeMap[context]!==undefined)return modeMap[context];
+  }
 
   switch(context){
     case 'pure-white': return lightH;
@@ -585,15 +695,19 @@ function getAdaptiveSaturation(h,s,l,context,lTarget){
   return base;
 }
 function getAdaptiveLuminosity(h,s,l,context){
-  // Fixed at 95 this used to crush chroma to near-zero regardless of base
-  // hue/saturation (HSL chroma collapses as L→100 no matter what S is), so
-  // every base ended up looking like the same white smudge. Giving dark
-  // bases more headroom below 95 keeps them still clearly "near white"
-  // while leaving enough chroma for the tint to actually read.
-  if(context==='pure-white')return clamp(l+55,88,96);
-  if(context==='bright')return Math.min(l+32,88);
-  if(context==='light')return Math.min(l+20,80);
-  if(context==='midlight')return Math.min(l+10,72);
+  // Each light tier used to cap at a fixed value (72/80/88/88-96). That
+  // works for mid-range bases, but when the base itself is already very
+  // light (e.g. l=93) those fixed caps sit BELOW the base's own lightness —
+  // the "highlights" end up darker than the color they're supposed to be
+  // lightening, breaking the light→dark ordering of the whole palette.
+  // Using a fraction of the remaining headroom to white (100-l) instead
+  // keeps every tier strictly lighter than the base and than the tier
+  // before it, no matter how light or dark the base starts out.
+  const headroom=100-l;
+  if(context==='pure-white')return Math.min(l+headroom*0.90,99);
+  if(context==='bright')return Math.min(l+headroom*0.72,99);
+  if(context==='light')return Math.min(l+headroom*0.50,99);
+  if(context==='midlight')return Math.min(l+headroom*0.28,99);
   // Floors used to be fixed values (25/15/8/4), which could end up brighter
   // than the base itself when the base color is very dark (e.g. l=10). Cap
   // each floor at a fraction of the base's own lightness so shadows always
@@ -675,6 +789,9 @@ const I18N={
     copied:'COPIADO ✓',pngDl:'PNG DESCARGADO ✓',
     exploreComp:'Explorar complementario',btnCss:'⧉ CSS',cssCopied:'CSS COPIADO ✓',clearHist:'Limpiar historial',delItem:'Eliminar',
     emptyHistory:'Las paletas generadas aparecerán aquí',
+    modeMenuTitle:'Modo de sombras',
+    modeDefault:'Sombras',modeCool:'Sombras frías',modeWarm:'Sombras cálidas',modeSkin:'Piel',
+    skinNote:'Ten en cuenta que esta sección solo incluye algunos ejemplos de tonos de piel como referencia. Sabemos que existe una gran diversidad, por lo que, si no encuentras el tono que necesitas, siéntete con total libertad de agregarlo tú mismo en el apartado superior.',
     roles:['Blanco tintado','Brillo máximo','Luz alta','Luz media','Color base','Sombra suave','Sombra media','Sombra profunda','Núcleo de sombra'],
     theories:[
       'Blanco tintado con análogo cálido ({a}°). La luz ambiental siempre tiene temperatura cromática.',
@@ -713,6 +830,9 @@ const I18N={
     copied:'COPIED ✓',pngDl:'PNG DOWNLOADED ✓',
     exploreComp:'Explore complementary',btnCss:'⧉ CSS',cssCopied:'CSS COPIED ✓',clearHist:'Clear history',delItem:'Delete',
     emptyHistory:'Generated palettes will appear here',
+    modeMenuTitle:'Shadow mode',
+    modeDefault:'Shadows',modeCool:'Cool shadows',modeWarm:'Warm shadows',modeSkin:'Skin',
+    skinNote:'Keep in mind this section only includes a few example skin tones as a reference. We know there is huge diversity out there, so if you can\'t find the tone you need, feel free to add it yourself in the section above.',
     roles:['Tinted white','Max highlight','High light','Mid light','Base color','Soft shadow','Mid shadow','Deep shadow','Core shadow'],
     theories:[
       'White tinted with warm analog ({a}°). Ambient light always carries chromatic temperature.',
@@ -751,6 +871,9 @@ const I18N={
     copied:'COPIADO ✓',pngDl:'PNG BAIXADO ✓',
     exploreComp:'Explorar complementar',btnCss:'⧉ CSS',cssCopied:'CSS COPIADO ✓',clearHist:'Limpar histórico',delItem:'Excluir',
     emptyHistory:'As paletas geradas aparecerão aqui',
+    modeMenuTitle:'Modo de sombras',
+    modeDefault:'Sombras',modeCool:'Sombras frias',modeWarm:'Sombras quentes',modeSkin:'Pele',
+    skinNote:'Tenha em mente que esta seção inclui apenas alguns exemplos de tons de pele como referência. Sabemos que existe uma grande diversidade, então, se não encontrar o tom que precisa, sinta-se à vontade para adicioná-lo você mesmo na seção acima.',
     roles:['Branco tintado','Brilho máximo','Luz alta','Luz média','Cor base','Sombra suave','Sombra média','Sombra profunda','Núcleo de sombra'],
     theories:[
       'Branco tintado com análogo quente ({a}°). A luz ambiente sempre tem temperatura cromática.',
@@ -789,6 +912,9 @@ const I18N={
     copied:'COPIÉ ✓',pngDl:'PNG TÉLÉCHARGÉ ✓',
     exploreComp:'Explorer la complémentaire',btnCss:'⧉ CSS',cssCopied:'CSS COPIÉ ✓',clearHist:'Effacer l\'historique',delItem:'Supprimer',
     emptyHistory:'Les palettes générées apparaîtront ici',
+    modeMenuTitle:'Mode d\'ombres',
+    modeDefault:'Ombres',modeCool:'Ombres froides',modeWarm:'Ombres chaudes',modeSkin:'Peau',
+    skinNote:'Sachez que cette section n\'inclut que quelques exemples de tons de peau à titre de référence. Nous savons qu\'il existe une grande diversité ; si vous ne trouvez pas le ton dont vous avez besoin, n\'hésitez pas à l\'ajouter vous-même dans la section ci-dessus.',
     roles:['Blanc teinté','Éclat maximum','Lumière haute','Lumière moyenne','Couleur base','Ombre douce','Ombre moyenne','Ombre profonde','Noyau d\'ombre'],
     theories:[
       'Blanc teinté d\'analogue chaud ({a}°). La lumière ambiante a toujours une température chromatique.',
@@ -827,6 +953,9 @@ const I18N={
     copied:'KOPIERT ✓',pngDl:'PNG HERUNTERGELADEN ✓',
     exploreComp:'Komplementär erkunden',btnCss:'⧉ CSS',cssCopied:'CSS KOPIERT ✓',clearHist:'Verlauf löschen',delItem:'Löschen',
     emptyHistory:'Generierte Paletten erscheinen hier',
+    modeMenuTitle:'Schattenmodus',
+    modeDefault:'Schatten',modeCool:'Kühle Schatten',modeWarm:'Warme Schatten',modeSkin:'Haut',
+    skinNote:'Bitte beachte, dass dieser Bereich nur einige Beispiel-Hauttöne als Referenz enthält. Wir wissen, dass es eine große Vielfalt gibt. Falls du den gewünschten Ton nicht findest, füge ihn gerne selbst im Bereich oben hinzu.',
     roles:['Getöntes Weiß','Max Glanz','Hohes Licht','Mittleres Licht','Basisfarbe','Weicher Schatten','Mittlerer Schatten','Tiefer Schatten','Kernschatten'],
     theories:[
       'Weiß mit warmem Analogton ({a}°). Umgebungslicht hat immer chromatische Temperatur.',
@@ -863,6 +992,61 @@ function setLang(lang){
   if(currentHex)generate();
 }
 
+function renderSkinCatalog(){
+  const names=SKIN_TONE_NAMES[currentLang]||SKIN_TONE_NAMES.es;
+  const grid=document.getElementById('skinCatalogGrid');
+  grid.innerHTML=SKIN_HEXES.map((hex,i)=>`
+    <div class="skin-swatch${hex.toUpperCase()===document.getElementById('inHex').value.toUpperCase()?' active':''}" data-hex="${hex}" title="${names[i]}" onclick="selectSkinTone('${hex}')">
+      <div class="skin-swatch-color" style="background:${hex}"></div>
+    </div>`).join('');
+}
+
+function selectSkinTone(hex){
+  document.getElementById('inHex').value=hex;
+  syncFromHex();
+  document.querySelectorAll('.skin-swatch').forEach(s=>s.classList.toggle('active',s.dataset.hex.toUpperCase()===hex.toUpperCase()));
+  generate();
+}
+
+function updateInputModeUI(){
+  const isSkin=shadowMode==='skin';
+  document.getElementById('skinCatalog').style.display=isSkin?'block':'none';
+  if(isSkin)renderSkinCatalog();
+}
+
+
+function updateModeBtnLabel(){
+  document.getElementById('modeBtnLabel').textContent='◆ '+Lx()[
+    shadowMode==='default'?'modeDefault':
+    shadowMode==='cool'?'modeCool':
+    shadowMode==='warm'?'modeWarm':'modeSkin'
+  ];
+}
+
+function toggleModeMenu(e){
+  if(e)e.stopPropagation();
+  document.getElementById('modeDropdown').classList.toggle('open');
+}
+
+function closeModeMenu(){
+  document.getElementById('modeDropdown').classList.remove('open');
+}
+
+function setShadowMode(mode){
+  shadowMode=mode;
+  try{localStorage.setItem('lumina_shadow_mode',mode);}catch(e){}
+  document.querySelectorAll('.mode-item').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  updateModeBtnLabel();
+  updateInputModeUI();
+  closeModeMenu();
+  if(currentHex)generate();
+}
+
+document.addEventListener('click',(e)=>{
+  const dd=document.getElementById('modeDropdown');
+  if(dd&&!dd.contains(e.target))dd.classList.remove('open');
+});
+
 function applyLangUI(){
   const l=Lx();
   document.getElementById('logoSub').textContent=l.logoSub;
@@ -880,6 +1064,15 @@ function applyLangUI(){
   document.getElementById('historyTitle').textContent=l.historyTitle;
   const clearBtn=document.getElementById('historyClearBtn');
   if(clearBtn)clearBtn.title=l.clearHist;
+  document.getElementById('modeMenuTitle').textContent=l.modeMenuTitle;
+  document.getElementById('modeItemDefault').textContent=l.modeDefault;
+  document.getElementById('modeItemCool').textContent=l.modeCool;
+  document.getElementById('modeItemWarm').textContent=l.modeWarm;
+  document.getElementById('modeItemSkin').textContent=l.modeSkin;
+  document.getElementById('skinCatalogTitle').textContent='// '+l.modeSkin;
+  document.getElementById('skinNote').textContent=l.skinNote;
+  if(shadowMode==='skin')renderSkinCatalog();
+  updateModeBtnLabel();
 }
 
 // ══ SYNC INPUTS ══
@@ -934,6 +1127,58 @@ function applyTheme(r,g,b,h,s,l){
   document.getElementById('orb2').style.background=`rgba(${cr},${cg},${cb},0.06)`;
   document.getElementById('orb3').style.background=`rgba(${r},${g},${b},0.04)`;
   document.getElementById('compDot').style.background=`rgb(${cr},${cg},${cb})`;
+}
+
+// Populate and position the single shared tooltip in fixed viewport
+// coordinates, clamped so it never spills off any edge (left/right/top/
+// bottom) or gets clipped by an ancestor's overflow:hidden. Living at
+// body level (not nested inside a .tone-card) also means it's unaffected
+// by the `transform` a card gets on :hover, which would otherwise break
+// position:fixed's viewport-relative behavior. Works the same for every
+// row/column count, replacing the old fixed "top row" special-case.
+function showSharedTooltip(card){
+  const tooltip=document.getElementById('sharedTooltip');
+  const arrow=document.getElementById('sharedTtArrow');
+  document.getElementById('sharedTtTitle').textContent=Lx().ttTitle;
+  document.getElementById('sharedTtTheory').textContent=card.dataset.ttTheory;
+  const actionsEl=document.getElementById('sharedTtActions');
+  actionsEl.innerHTML='';
+  (card._ttActions||[]).forEach(a=>{const li=document.createElement('li');li.textContent=a;actionsEl.appendChild(li);});
+
+  const margin=10;
+  const vw=window.innerWidth,vh=window.innerHeight;
+  const cardRect=card.getBoundingClientRect();
+  const tw=Math.min(256,vw-margin*2);
+  tooltip.style.width=tw+'px';
+  tooltip.classList.add('tt-show');  // needed before measuring height (visibility, not display, keeps layout)
+  const th=tooltip.offsetHeight;
+
+  let left=cardRect.left+cardRect.width/2-tw/2;
+  left=Math.max(margin,Math.min(left,vw-tw-margin));
+
+  const spaceAbove=cardRect.top;
+  const spaceBelow=vh-cardRect.bottom;
+  let top,arrowUp;
+  if(spaceAbove>=th+margin || spaceAbove>=spaceBelow){
+    top=cardRect.top-th-margin;
+    arrowUp=false;                     // tooltip sits above → arrow points down
+  }else{
+    top=cardRect.bottom+margin;
+    arrowUp=true;                      // tooltip sits below → arrow points up
+  }
+  top=Math.max(margin,Math.min(top,vh-th-margin));
+
+  tooltip.style.left=left+'px';
+  tooltip.style.top=top+'px';
+
+  const arrowCenter=cardRect.left+cardRect.width/2-left;
+  arrow.style.left=Math.max(16,Math.min(arrowCenter,tw-16))+'px';
+  arrow.classList.toggle('arrow-down',!arrowUp);
+  arrow.classList.toggle('arrow-up',arrowUp);
+}
+
+function hideSharedTooltip(){
+  document.getElementById('sharedTooltip').classList.remove('tt-show');
 }
 
 // ══ HISTORY ══
@@ -1131,19 +1376,15 @@ function generate(){
     card.className='tone-card';
     if(isBase){card.style.outline=`2px solid ${roleColor}`;card.style.outlineOffset='-2px';card.style.zIndex='2';}
 
-    // ── tooltip ──
-    const tooltip=document.createElement('div');
-    tooltip.className='tone-tooltip';
-    const ttTitle=document.createElement('div');ttTitle.className='tt-title';ttTitle.textContent=Lx().ttTitle;
-    const ttTheory=document.createElement('div');ttTheory.className='tt-theory';ttTheory.textContent=def.theory;
-    const ttList=document.createElement('ul');ttList.className='tt-actions';
-    def.actions.forEach(a=>{const li=document.createElement('li');li.textContent=a;ttList.appendChild(li);});
-    tooltip.appendChild(ttTitle);tooltip.appendChild(ttTheory);tooltip.appendChild(ttList);
-    card.appendChild(tooltip);
-
-    // The top row of the grid sits right under the input/panel controls, so
-    // its tooltips always open downward to avoid covering those controls.
-    if(idx<3)card.classList.add('flip-down');
+    // ── tooltip (shared, body-level element — see positionTooltip) ──
+    // Storing the theory/actions on the card itself and populating a single
+    // shared tooltip on hover avoids nesting the tooltip inside a card that
+    // gets `transform` on :hover, which would otherwise break its
+    // position:fixed viewport-relative positioning.
+    card.dataset.ttTheory=def.theory;
+    card._ttActions=def.actions;
+    card.addEventListener('mouseenter',()=>showSharedTooltip(card));
+    card.addEventListener('mouseleave',hideSharedTooltip);
 
     // ── swatch ──
     const swatchEl=document.createElement('div');
@@ -1450,7 +1691,20 @@ document.addEventListener('keydown',e=>{
     document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===saved));
   }
 })();
+
+// Restore the previously selected shadow mode (persisted across sessions)
+(function restoreShadowMode(){
+  let saved=null;
+  try{saved=localStorage.getItem('lumina_shadow_mode');}catch(e){}
+  if(saved&&SHADOW_MODE_HUES[saved]||saved==='default'){
+    if(saved==='default'||SHADOW_MODE_HUES[saved]){
+      shadowMode=saved;
+      document.querySelectorAll('.mode-item').forEach(b=>b.classList.toggle('active',b.dataset.mode===saved));
+    }
+  }
+})();
 applyLangUI();
+updateInputModeUI();
 loadHistoryFromStorage();
 generate();
 </script>
